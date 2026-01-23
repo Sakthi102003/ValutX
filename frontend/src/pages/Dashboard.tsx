@@ -4,16 +4,17 @@ import { useVaultStore } from '../store/vaultStore';
 import type { VaultItemType, DecryptedVaultItem } from '../store/vaultStore';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Lock, LogOut, Plus, Search, CreditCard, Key, FileText, User, ShieldAlert, Shield, Settings } from 'lucide-react';
+import { Lock, LogOut, Plus, Search, CreditCard, Key, FileText, User, ShieldAlert, Shield, Settings, Zap } from 'lucide-react';
 import { cn } from '../lib/utils';
 import NewItemModal from '../components/NewItemModal';
 import ViewItemModal from '../components/ViewItemModal';
+import PasswordGenerator from '../components/PasswordGenerator';
 import SettingsPage from './SettingsPage';
 
 export default function Dashboard() {
-    const { logout, panicLock, decryptedItems, addItem, updateItem, deleteItem, fetchItems, userEmail } = useVaultStore();
+    const { logout, panicLock, decryptedItems, addItem, updateItem, deleteItem, fetchItems, userEmail, clipboardStatus, settings } = useVaultStore();
     const [activeTab, setActiveTab] = useState<VaultItemType | 'all'>('all');
-    const [view, setView] = useState<'items' | 'settings'>('items');
+    const [view, setView] = useState<'items' | 'settings' | 'generator'>('items');
     const [search, setSearch] = useState('');
 
     const [isAddOpen, setIsAddOpen] = useState(false);
@@ -30,6 +31,32 @@ export default function Dashboard() {
             fetchItems();
         }
     }, [fetchItems, decryptedItems.length]);
+
+    // Feature 2: Keyboard Shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!settings.keyboardShortcuts) return;
+
+            // Search: /
+            if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                document.querySelector<HTMLInputElement>('input[placeholder="IDENTIFY DATA..."]')?.focus();
+            }
+            // New Item: Ctrl + N
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                setIsAddOpen(true);
+            }
+            // Panic: Alt + Shift + P
+            if (e.altKey && e.shiftKey && e.key === 'P') {
+                e.preventDefault();
+                panicLock();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [settings.keyboardShortcuts, panicLock]);
 
     // Handle Add / Edit
     const handleSaveItem = async (type: VaultItemType, data: any, id?: string) => {
@@ -99,6 +126,7 @@ export default function Dashboard() {
                     <SidebarItem icon={<User className="w-4 h-4" />} label="Auth Credentials" active={view === 'items' && activeTab === 'login'} onClick={() => { setView('items'); setActiveTab('login'); }} count={decryptedItems.filter(i => i.type === 'login').length} />
                     <SidebarItem icon={<CreditCard className="w-4 h-4" />} label="Financial Keys" active={view === 'items' && activeTab === 'card'} onClick={() => { setView('items'); setActiveTab('card'); }} count={decryptedItems.filter(i => i.type === 'card').length} />
                     <SidebarItem icon={<FileText className="w-4 h-4" />} label="Secure Data" active={view === 'items' && activeTab === 'note'} onClick={() => { setView('items'); setActiveTab('note'); }} count={decryptedItems.filter(i => i.type === 'note').length} />
+                    <SidebarItem icon={<Zap className="w-4 h-4" />} label="Entropy Forge" active={view === 'generator'} onClick={() => setView('generator')} count={0} />
                 </nav>
 
                 <div className="px-2 py-2 border-t border-white/5">
@@ -112,7 +140,12 @@ export default function Dashboard() {
                 </div>
 
                 <div className="pt-4 border-t border-white/5 space-y-2">
-                    <Button variant="ghost" className="w-full justify-start hover:bg-red-500/10 hover:text-red-500 group transition-all rounded-sm border border-transparent hover:border-red-500/30 text-xs uppercase tracking-widest font-bold" onClick={panicLock}>
+                    <Button
+                        variant="ghost"
+                        className="w-full justify-start hover:bg-red-500/10 hover:text-red-500 group transition-all rounded-sm border border-transparent hover:border-red-500/30 text-xs uppercase tracking-widest font-bold"
+                        onClick={panicLock}
+                        title="IMMEDIATE COUNTERMEASURE: Wipes all decrypted data from memory and terminates session instantly."
+                    >
                         <ShieldAlert className="w-4 h-4 mr-3 group-hover:text-red-500 animate-pulse" /> Panic Protocol
                     </Button>
                     <Button variant="ghost" className="w-full justify-start hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity" onClick={logout}>
@@ -126,25 +159,45 @@ export default function Dashboard() {
                 {/* Header */}
                 <header className="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-black/40 backdrop-blur-md">
                     <div className="w-96">
-                        <div className="relative group">
-                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                            <Input
-                                placeholder="IDENTIFY DATA..."
-                                className="pl-10 bg-white/5 border-white/10 focus:bg-white/10 focus:border-primary/50 transition-all h-10 shadow-inner rounded-sm font-mono text-xs uppercase tracking-wider"
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                            />
-                        </div>
+                        {view === 'items' && (
+                            <div className="relative group">
+                                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                <Input
+                                    placeholder="IDENTIFY DATA..."
+                                    className="pl-10 bg-white/5 border-white/10 focus:bg-white/10 focus:border-primary/50 transition-all h-10 shadow-inner rounded-sm font-mono text-xs uppercase tracking-wider"
+                                    value={search}
+                                    onChange={e => setSearch(e.target.value)}
+                                />
+                            </div>
+                        )}
+                        {view === 'generator' && (
+                            <div className="flex items-center space-x-2 text-primary/40 font-mono text-[10px] uppercase tracking-widest">
+                                <Zap className="w-3 h-3" />
+                                <span>Generator Active // No Search Range</span>
+                            </div>
+                        )}
+                        {view === 'settings' && (
+                            <div className="flex items-center space-x-2 text-primary/40 font-mono text-[10px] uppercase tracking-widest">
+                                <Settings className="w-3 h-3" />
+                                <span>System Config // Local Node</span>
+                            </div>
+                        )}
                     </div>
-                    <Button size="sm" className="bg-primary hover:bg-primary/80 text-black font-bold uppercase tracking-[0.2em] rounded-sm px-6 shadow-[0_0_20px_rgba(255,176,0,0.3)] transition-all hover:scale-[1.02] active:scale-95" onClick={() => setIsAddOpen(true)}>
-                        <Plus className="w-4 h-4 mr-2" /> Add Record
-                    </Button>
+                    {view === 'items' && (
+                        <Button size="sm" className="bg-primary hover:bg-primary/80 text-black font-bold uppercase tracking-[0.2em] rounded-sm px-6 shadow-[0_0_20px_rgba(255,176,0,0.3)] transition-all hover:scale-[1.02] active:scale-95" onClick={() => setIsAddOpen(true)}>
+                            <Plus className="w-4 h-4 mr-2" /> Add Record
+                        </Button>
+                    )}
                 </header>
 
                 {/* Scrollable Content */}
                 {view === 'settings' ? (
                     <div className="flex-1 overflow-auto scrollbar-hide">
                         <SettingsPage />
+                    </div>
+                ) : view === 'generator' ? (
+                    <div className="flex-1 overflow-auto scrollbar-hide">
+                        <PasswordGenerator />
                     </div>
                 ) : (
                     <div className="flex-1 overflow-auto p-8 scrollbar-hide relative group/content">
@@ -235,6 +288,30 @@ export default function Dashboard() {
                 onDelete={handleDeleteItem}
                 onEdit={handleEditItem}
             />
+
+            {/* Clipboard Status Overlay */}
+            {clipboardStatus && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-5 duration-300">
+                    <div className="bg-primary px-4 py-2 rounded-sm border border-black/20 shadow-[0_0_30px_rgba(255,176,0,0.3)] flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-black rounded-full animate-pulse" />
+                            <span className="text-[10px] font-black uppercase text-black tracking-widest">Active Clipboard</span>
+                        </div>
+                        <div className="h-4 w-[1px] bg-black/20" />
+                        <span className="text-[10px] font-mono font-bold text-black uppercase">
+                            Clearing in <span className="text-sm">{clipboardStatus.timeLeft}s</span>
+                        </span>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-[8px] border border-black/20 hover:bg-black/10 text-black font-black uppercase"
+                            onClick={() => useVaultStore.getState().setClipboardStatus(null)}
+                        >
+                            Abstain
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

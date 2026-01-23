@@ -6,11 +6,22 @@ import { Label } from '../components/ui/Label';
 import { ShieldCheck, AlertTriangle } from 'lucide-react';
 
 export default function SettingsPage() {
-    const { changeMasterPassword, userEmail, isLoading, error, setError } = useVaultStore();
+    const {
+        changeMasterPassword,
+        userEmail,
+        isLoading,
+        error,
+        setError,
+        exportVault,
+        importVault,
+        settings,
+        setAutoLockMinutes
+    } = useVaultStore();
     const [oldPass, setOldPass] = useState('');
     const [newPass, setNewPass] = useState('');
     const [confirmPass, setConfirmPass] = useState('');
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
+    const [importing, setImporting] = useState(false);
 
     const handleChangePassword = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -118,6 +129,93 @@ export default function SettingsPage() {
                             {isLoading ? "Encrypting Sector..." : "Rotate Protocol Keys"}
                         </Button>
                     </form>
+                </div>
+
+                {/* Vault Management */}
+                <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-sm p-8 relative overflow-hidden group">
+                    <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-8 text-primary/70">Vault Management</h3>
+                    <div className="space-y-4">
+                        <div className="p-4 border border-white/5 bg-white/5 rounded-sm">
+                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-white mb-2">Export Encrypted Backup</h4>
+                            <p className="text-[9px] text-muted-foreground uppercase leading-relaxed mb-4">
+                                Download a local decrypted JSON copy of your vault. WARNING: Keep this file secure.
+                            </p>
+                            <Button onClick={exportVault} variant="outline" size="sm" className="w-full text-[9px] uppercase tracking-widest font-bold border-white/10 hover:border-primary/50 transition-all">
+                                Generate Data Export
+                            </Button>
+                        </div>
+
+                        <div className="p-4 border border-white/5 bg-white/5 rounded-sm">
+                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-white mb-2">Import Data Stream</h4>
+                            <p className="text-[9px] text-muted-foreground uppercase leading-relaxed mb-4">
+                                Restoration from a compatible JSON archive.
+                            </p>
+                            <input
+                                type="file"
+                                id="import-vault"
+                                className="hidden"
+                                accept=".json"
+                                onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        setImporting(true);
+                                        const reader = new FileReader();
+                                        reader.onload = async (ev) => {
+                                            const success = await importVault(ev.target?.result as string);
+                                            setImporting(false);
+                                            if (success) {
+                                                setSuccessMsg("Import successful!");
+                                            } else {
+                                                setError("Import failed. Invalid format.");
+                                            }
+                                        };
+                                        reader.readAsText(file);
+                                    }
+                                }}
+                            />
+                            <Button
+                                onClick={() => document.getElementById('import-vault')?.click()}
+                                variant="outline"
+                                size="sm"
+                                className="w-full text-[9px] uppercase tracking-widest font-bold border-white/10 hover:border-primary/50 transition-all"
+                                disabled={importing}
+                            >
+                                {importing ? "Processing Stream..." : "Initiate Import"}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* System Parameters */}
+                <div className="bg-black/40 backdrop-blur-sm border border-white/10 rounded-sm p-8 relative overflow-hidden group">
+                    <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-8 text-primary/70">System Parameters</h3>
+                    <div className="space-y-6">
+                        <div className="space-y-2">
+                            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Auto-Lock Sensitivity</Label>
+                            <div className="flex items-center space-x-4">
+                                <input
+                                    type="range"
+                                    min="1"
+                                    max="60"
+                                    value={settings.autoLockMinutes}
+                                    onChange={(e) => setAutoLockMinutes(parseInt(e.target.value))}
+                                    className="flex-1 accent-primary bg-white/10 h-1 rounded-full appearance-none cursor-pointer"
+                                />
+                                <span className="text-[10px] font-mono font-bold text-primary w-12 text-right">{settings.autoLockMinutes} MIN</span>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-white/5 border border-white/5 rounded-sm group hover:border-primary/20 transition-all cursor-pointer"
+                            onClick={() => useVaultStore.setState((s) => ({ settings: { ...s.settings, keyboardShortcuts: !s.settings.keyboardShortcuts } }))}>
+                            <div>
+                                <h4 className="text-[10px] font-bold uppercase tracking-widest text-white">Neural Shortcuts</h4>
+                                <p className="text-[8px] text-muted-foreground uppercase mt-1">Enable /, Ctrl+N, Alt+Shift+P</p>
+                            </div>
+                            <div className={`w-8 h-4 rounded-full transition-all relative ${settings.keyboardShortcuts ? 'bg-primary' : 'bg-white/10'}`}>
+                                <div className={`absolute top-1 w-2 h-2 rounded-full bg-black transition-all ${settings.keyboardShortcuts ? 'right-1' : 'left-1'}`} />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

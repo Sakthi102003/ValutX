@@ -26,6 +26,8 @@ export interface DecryptedVaultItem {
     data: any; // The decrypted JSON
     createdAt: string;
     fav: boolean;
+    rawEnc: string; // The base64 ciphertext
+    rawIv: string;  // The base64 IV
 }
 
 interface VaultState {
@@ -39,11 +41,21 @@ interface VaultState {
     isLoading: boolean;
     error: string | null;
 
+    // Feature 2: UX & Security
+    lastActivity: number;
+    autoLockTimer: number | null;
+    clipboardStatus: { text: string; timeLeft: number } | null;
+    settings: {
+        autoLockMinutes: number;
+        keyboardShortcuts: boolean;
+    };
+
     // Actions
     setError: (msg: string | null) => void;
     signup: (email: string, password: string) => Promise<boolean>;
     login: (email: string, password: string) => Promise<boolean>;
     changeMasterPassword: (oldPw: string, newPw: string) => Promise<boolean>;
+    verifyMasterPassword: (password: string) => Promise<boolean>;
     logout: () => void;
     panicLock: () => void;
 
@@ -52,6 +64,13 @@ interface VaultState {
     updateItem: (id: string, type: VaultItemType, data: any) => Promise<void>;
     deleteItem: (id: string) => Promise<void>;
     fetchItems: () => Promise<void>;
+
+    // Feature 2 & 3 Actions
+    updateActivity: () => void;
+    setAutoLockMinutes: (mins: number) => void;
+    setClipboardStatus: (text: string | null, duration?: number) => void;
+    exportVault: () => void;
+    importVault: (data: string) => Promise<boolean>;
 }
 
 export const useVaultStore = create<VaultState>((set, get) => ({
@@ -64,6 +83,14 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     decryptedItems: [],
     isLoading: false,
     error: null,
+
+    lastActivity: Date.now(),
+    autoLockTimer: null,
+    clipboardStatus: null,
+    settings: {
+        autoLockMinutes: 5,
+        keyboardShortcuts: true,
+    },
 
     setError: (msg) => set({ error: msg }),
 
@@ -192,7 +219,9 @@ export const useVaultStore = create<VaultState>((set, get) => ({
                         type: item.type,
                         data: data,
                         createdAt: item.created_at,
-                        fav: false // Not in DB yet
+                        fav: false,
+                        rawEnc: item.enc_data,
+                        rawIv: item.iv
                     });
                 } catch (err) {
                     console.error(`Failed to decrypt item ${item.id}`, err);
@@ -225,7 +254,9 @@ export const useVaultStore = create<VaultState>((set, get) => ({
             type: newItem.type,
             data: data,
             createdAt: newItem.created_at,
-            fav: false
+            fav: false,
+            rawEnc: cipherText,
+            rawIv: iv
         };
 
         set({ decryptedItems: [...decryptedItems, newDecrypted] });
@@ -237,7 +268,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
 
         const { cipherText, iv } = await encryptVaultItem(data, dek);
 
-        const res = await axios.put(`${API_URL}/vault/${id}`, {
+        await axios.put(`${API_URL}/vault/${id}`, {
             enc_data: cipherText,
             iv: iv,
             auth_tag: ""
@@ -246,7 +277,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
         // Update local state
         const updatedList = decryptedItems.map(item => {
             if (item.id === id) {
-                return { ...item, data, type };
+                return { ...item, data, type, rawEnc: cipherText, rawIv: iv };
             }
             return item;
         });
@@ -313,6 +344,19 @@ export const useVaultStore = create<VaultState>((set, get) => ({
         }
     },
 
+    verifyMasterPassword: async (password) => {
+        const { kdfSalt, encryptedDek } = get();
+        if (!kdfSalt || !encryptedDek) return false;
+
+        try {
+            const kek = await deriveKEK(password, kdfSalt);
+            await unwrapDEK(encryptedDek.cipherText, encryptedDek.iv, kek);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    },
+
     deleteItem: async (id) => {
         const { decryptedItems } = get();
         await axios.delete(`${API_URL}/vault/${id}`);
@@ -339,5 +383,75 @@ export const useVaultStore = create<VaultState>((set, get) => ({
             userEmail: null
         });
         window.location.reload();
+    },
+
+    updateActivity: () => {
+        const { isAuthenticated, settings } = get();
+        if (!isAuthenticated) return;
+
+        set({ lastActivity: Date.now() });
+
+        // Clear existing timer
+        const oldTimer = get().autoLockTimer;
+        if (oldTimer) window.clearTimeout(oldTimer);
+
+        // Set new timer
+        const newTimer = window.setTimeout(() => {
+            get().logout();
+        }, settings.autoLockMinutes * 60000);
+
+        set({ autoLockTimer: newTimer });
+    },
+
+    setAutoLockMinutes: (mins) => {
+        set((state) => ({ settings: { ...state.settings, autoLockMinutes: mins } }));
+        get().updateActivity();
+    },
+
+    setClipboardStatus: (text, duration = 30) => {
+        if (!text) {
+            set({ clipboardStatus: null });
+            return;
+        }
+
+        set({ clipboardStatus: { text, timeLeft: duration } });
+
+        // Start countdown
+        const interval = setInterval(() => {
+            const status = get().clipboardStatus;
+            if (!status || status.timeLeft <= 1) {
+                clearInterval(interval);
+                set({ clipboardStatus: null });
+                navigator.clipboard.writeText("");
+            } else {
+                set({ clipboardStatus: { ...status, timeLeft: status.timeLeft - 1 } });
+            }
+        }, 1000);
+    },
+
+    exportVault: () => {
+        const { decryptedItems } = get();
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(decryptedItems, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", `valutx_export_${new Date().toISOString().split('T')[0]}.json`);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    },
+
+    importVault: async (jsonStr) => {
+        try {
+            const data = JSON.parse(jsonStr);
+            if (!Array.isArray(data)) throw new Error("Invalid format");
+
+            for (const item of data) {
+                await get().addItem(item.type, item.data);
+            }
+            return true;
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
     }
 }));

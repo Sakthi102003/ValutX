@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useVaultStore } from '../store/vaultStore';
 import type { DecryptedVaultItem } from '../store/vaultStore';
 import { Button } from './ui/Button';
 import { Label } from './ui/Label';
 import { X, Copy, Eye, EyeOff, Trash2, Check } from 'lucide-react';
+import MasterPasswordVerify from './MasterPasswordVerify';
 
 interface Props {
     item: DecryptedVaultItem | null;
@@ -12,24 +14,28 @@ interface Props {
 }
 
 export default function ViewItemModal({ item, onClose, onDelete, onEdit }: Props) {
-    const [showPassword, setShowPassword] = useState(false);
-    const [clipboardMsg, setClipboardMsg] = useState<string | null>(null);
+    const { setClipboardStatus } = useVaultStore();
+    const [showSecrets, setShowSecrets] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(false);
 
     if (!item) return null;
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
-        setClipboardMsg("Copied! Clearing in 30s...");
-        setTimeout(() => setClipboardMsg(null), 3000); // Hide toast after 3s
+        setClipboardStatus(text, 30);
+    };
 
-        // Auto-clear
-        setTimeout(() => {
-            navigator.clipboard.readText().then(currentText => {
-                if (currentText === text) {
-                    navigator.clipboard.writeText("");
-                }
-            }).catch(err => console.error("Clipboard read failed", err));
-        }, 30000);
+    const toggleSecrets = () => {
+        if (!showSecrets) {
+            setIsVerifying(true);
+        } else {
+            setShowSecrets(false);
+        }
+    };
+
+    const handleVerificationSuccess = () => {
+        setShowSecrets(true);
+        setIsVerifying(false);
     };
 
     const handleDelete = () => {
@@ -47,13 +53,6 @@ export default function ViewItemModal({ item, onClose, onDelete, onEdit }: Props
                 </button>
 
                 <div className="mb-6 pr-8 relative">
-                    {clipboardMsg && (
-                        <div className="absolute top-[-40px] left-0 right-0 text-center">
-                            <span className="bg-primary/90 text-primary-foreground text-xs px-2 py-1 rounded-full shadow-lg transition-all animate-in fade-in slide-in-from-bottom-2">
-                                {clipboardMsg}
-                            </span>
-                        </div>
-                    )}
                     <h2 className="text-xl font-bold">{item.data.name}</h2>
                     <p className="text-xs text-muted-foreground uppercase tracking-wider mt-1">{item.type}</p>
                 </div>
@@ -66,8 +65,8 @@ export default function ViewItemModal({ item, onClose, onDelete, onEdit }: Props
                                 label="Password"
                                 value={item.data.password}
                                 isSecret
-                                showSecret={showPassword}
-                                onToggle={() => setShowPassword(!showPassword)}
+                                showSecret={showSecrets}
+                                onToggle={toggleSecrets}
                                 onCopy={copyToClipboard}
                             />
                             {item.data.website && <Field label="Website" value={item.data.website} onCopy={copyToClipboard} />}
@@ -76,10 +75,20 @@ export default function ViewItemModal({ item, onClose, onDelete, onEdit }: Props
 
                     {item.type === 'card' && (
                         <>
-                            <Field label="Card Number" value={item.data.number} isSecret showSecret={showPassword} onToggle={() => setShowPassword(!showPassword)} onCopy={copyToClipboard} />
+                            <Field label="Card Number" value={item.data.number} isSecret showSecret={showSecrets} onToggle={toggleSecrets} onCopy={copyToClipboard} />
                             <div className="grid grid-cols-2 gap-4">
                                 <Field label="Expiry" value={item.data.expiry} />
-                                <Field label="CVV" value={item.data.cvv} isSecret showSecret={showPassword} onToggle={() => setShowPassword(!showPassword)} />
+                                <Field label="CVV" value={item.data.cvv} isSecret showSecret={showSecrets} onToggle={toggleSecrets} />
+                            </div>
+                        </>
+                    )}
+
+                    {item.type === 'id' && (
+                        <>
+                            <Field label="ID Number" value={item.data.number} onCopy={copyToClipboard} />
+                            <div className="grid grid-cols-2 gap-4">
+                                <Field label="Issue Date" value={item.data.issueDate} />
+                                <Field label="Expiry Date" value={item.data.expiryDate} />
                             </div>
                         </>
                     )}
@@ -94,7 +103,38 @@ export default function ViewItemModal({ item, onClose, onDelete, onEdit }: Props
                     )}
                 </div>
 
-                <div className="flex justify-between pt-6 mt-2 border-t border-border">
+                <div className="mt-8 pt-6 border-t border-white/5">
+                    <details className="group/details">
+                        <summary className="list-none cursor-pointer flex items-center space-x-2 text-primary/40 hover:text-primary transition-colors">
+                            <div className="flex -space-x-1">
+                                <div className="w-1.5 h-1.5 rounded-full bg-primary/20" />
+                                <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                                <div className="w-1.5 h-1.5 rounded-full bg-primary/20" />
+                            </div>
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em]">Security Provenance (Zero-Knowledge Debug)</span>
+                        </summary>
+
+                        <div className="mt-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="space-y-1">
+                                <Label className="text-[8px] uppercase tracking-widest text-muted-foreground ml-1">Initialization Vector (IV)</Label>
+                                <div className="p-2 bg-black/40 border border-white/5 rounded-sm font-mono text-[9px] break-all text-amber-500/70">
+                                    {item.rawIv}
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-[8px] uppercase tracking-widest text-muted-foreground ml-1">Encrypted Payload (AES-256-GCM)</Label>
+                                <div className="p-2 bg-black/40 border border-white/5 rounded-sm font-mono text-[9px] break-all text-blue-500/70 max-h-32 overflow-auto">
+                                    {item.rawEnc}
+                                </div>
+                            </div>
+                            <p className="text-[8px] uppercase tracking-wider text-muted-foreground leading-relaxed opacity-50 px-1">
+                                * Every time you save, a new IV is generated. This ensures identical passwords produce unique ciphertexts.
+                            </p>
+                        </div>
+                    </details>
+                </div>
+
+                <div className="flex justify-between pt-6 mt-4 border-t border-border">
                     <div className="flex space-x-2">
                         <Button variant="destructive" size="sm" onClick={handleDelete} className="text-red-400 hover:text-red-300">
                             <Trash2 className="w-4 h-4 mr-2" /> Delete
@@ -105,6 +145,14 @@ export default function ViewItemModal({ item, onClose, onDelete, onEdit }: Props
                     </div>
                     <Button onClick={onClose}>Close</Button>
                 </div>
+
+                {/* Verification Overlay */}
+                {isVerifying && (
+                    <MasterPasswordVerify
+                        onSuccess={handleVerificationSuccess}
+                        onCancel={() => setIsVerifying(false)}
+                    />
+                )}
             </div>
         </div>
     );

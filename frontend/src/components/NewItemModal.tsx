@@ -3,7 +3,7 @@ import type { VaultItemType, DecryptedVaultItem } from '../store/vaultStore';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Label } from './ui/Label';
-import { X, RefreshCw } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface Props {
     isOpen: boolean;
@@ -12,22 +12,24 @@ interface Props {
     initialData?: DecryptedVaultItem | null;
 }
 
-const calculateStrength = (password: string) => {
-    if (!password) return { score: 0, label: '', color: 'bg-transparent' };
-    let score = 0;
-    if (password.length > 8) score++;
-    if (password.length > 12) score++;
-    if (/[A-Z]/.test(password)) score++;
-    if (/[0-9]/.test(password)) score++;
-    if (/[^A-Za-z0-9]/.test(password)) score++;
+const calculateDynamicEntropy = (pass: string) => {
+    if (!pass) return { bits: 0, label: 'Empty', color: 'bg-transparent', score: 0 };
+    let pool = 0;
+    if (/[a-z]/.test(pass)) pool += 26;
+    if (/[A-Z]/.test(pass)) pool += 26;
+    if (/[0-9]/.test(pass)) pool += 10;
+    if (/[^a-zA-Z0-9]/.test(pass)) pool += 32;
+    const bits = Math.floor(pass.length * Math.log2(Math.max(pool, 1)));
 
-    // Cap at 4
-    if (score > 4) score = 4;
+    let label = 'Very Weak';
+    let color = 'bg-red-500';
+    if (bits > 128) { label = 'Quantum Resistant'; color = 'bg-cyan-500'; }
+    else if (bits > 80) { label = 'Tactical Grade'; color = 'bg-green-500'; }
+    else if (bits > 60) { label = 'Secure'; color = 'bg-blue-500'; }
+    else if (bits > 40) { label = 'Standard'; color = 'bg-yellow-500'; }
+    else if (bits > 20) { label = 'Vulnerable'; color = 'bg-orange-500'; }
 
-    const labels = ['Weak', 'Fair', 'Good', 'Strong', 'Excellent'];
-    const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
-
-    return { score, label: labels[score], color: colors[score] };
+    return { bits, label, color };
 };
 
 export default function NewItemModal({ isOpen, onClose, onSave, initialData }: Props) {
@@ -55,16 +57,6 @@ export default function NewItemModal({ isOpen, onClose, onSave, initialData }: P
         onClose();
     };
 
-    const generatePassword = () => {
-        const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
-        const len = 16;
-        let pass = "";
-        for (let i = 0; i < len; i++) {
-            pass += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        setFormData({ ...formData, password: pass });
-    }
-
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="bg-card w-full max-w-lg border rounded-xl shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200">
@@ -75,7 +67,7 @@ export default function NewItemModal({ isOpen, onClose, onSave, initialData }: P
                 <h2 className="text-xl font-bold mb-6">{initialData ? 'Edit Item' : 'Add New Item'}</h2>
 
                 <div className="flex space-x-2 mb-6 p-1 bg-secondary/50 rounded-lg w-fit">
-                    {(['login', 'card', 'note'] as VaultItemType[]).map(t => (
+                    {(['login', 'card', 'id', 'note'] as VaultItemType[]).map(t => (
                         <Button
                             key={t}
                             type="button"
@@ -114,28 +106,33 @@ export default function NewItemModal({ isOpen, onClose, onSave, initialData }: P
                                 <Label>Password</Label>
                                 <div className="flex space-x-2">
                                     <Input
-                                        type="text" // Show clear text when creating/editing for UX, or password? usually user wants to see what they typed or generated.
+                                        type="text"
                                         value={formData.password || ''}
                                         onChange={e => setFormData({ ...formData, password: e.target.value })}
                                         className="font-mono"
+                                        placeholder="MANUAL INPUT..."
                                     />
-                                    <Button type="button" variant="outline" size="icon" onClick={generatePassword} title="Generate Password">
-                                        <RefreshCw className="w-4 h-4" />
-                                    </Button>
                                 </div>
-                                {formData.password && (
-                                    <div className="mt-2 space-y-1">
-                                        <div className="flex h-1.5 w-full bg-secondary/50 rounded-full overflow-hidden">
-                                            <div
-                                                className={`h-full transition-all duration-300 ${calculateStrength(formData.password).color}`}
-                                                style={{ width: `${(calculateStrength(formData.password).score + 1) * 20}%` }}
-                                            />
+                                {formData.password && (() => {
+                                    const entropy = calculateDynamicEntropy(formData.password);
+                                    return (
+                                        <div className="mt-3 space-y-2 p-2 bg-white/5 border border-white/5 rounded-sm animate-in fade-in slide-in-from-top-1 duration-300">
+                                            <div className="flex justify-between items-center px-1">
+                                                <span className="text-[8px] font-black uppercase tracking-widest text-primary/60">Entropy Analysis</span>
+                                                <span className="text-[10px] font-mono text-white">{entropy.bits} BITS</span>
+                                            </div>
+                                            <div className="h-1 w-full bg-secondary/50 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full transition-all duration-500 ease-out ${entropy.color}`}
+                                                    style={{ width: `${Math.min((entropy.bits / 128) * 100, 100)}%` }}
+                                                />
+                                            </div>
+                                            <p className="text-[9px] text-right font-black uppercase tracking-tighter" style={{ color: `var(--${entropy.color.split('-')[1]})` }}>
+                                                {entropy.label}
+                                            </p>
                                         </div>
-                                        <p className="text-[10px] text-right text-muted-foreground uppercase font-bold tracking-wider">
-                                            {calculateStrength(formData.password).label}
-                                        </p>
-                                    </div>
-                                )}
+                                    );
+                                })()}
                             </div>
                             <div className="space-y-2">
                                 <Label>Website</Label>
@@ -174,6 +171,37 @@ export default function NewItemModal({ isOpen, onClose, onSave, initialData }: P
                                         value={formData.cvv || ''}
                                         onChange={e => setFormData({ ...formData, cvv: e.target.value })}
                                         placeholder="123"
+                                    />
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {type === 'id' && (
+                        <>
+                            <div className="space-y-2">
+                                <Label>ID Number</Label>
+                                <Input
+                                    value={formData.number || ''}
+                                    onChange={e => setFormData({ ...formData, number: e.target.value })}
+                                    placeholder="Passport, SSN, License..."
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Issue Date</Label>
+                                    <Input
+                                        value={formData.issueDate || ''}
+                                        onChange={e => setFormData({ ...formData, issueDate: e.target.value })}
+                                        placeholder="YYYY-MM-DD"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Expiry Date</Label>
+                                    <Input
+                                        value={formData.expiryDate || ''}
+                                        onChange={e => setFormData({ ...formData, expiryDate: e.target.value })}
+                                        placeholder="YYYY-MM-DD"
                                     />
                                 </div>
                             </div>

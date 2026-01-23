@@ -18,21 +18,38 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
-  const { isAuthenticated, logout, panicLock } = useVaultStore();
+  const { isAuthenticated } = useVaultStore();
 
-  // Security: Auto-lock on visibility change
+  // Security: Auto-lock on visibility change & inactivity
+  const { updateActivity } = useVaultStore();
+
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden && isAuthenticated) {
-        // Potential auto-lock logic
+        // Optional: lock immediately when hidden
+        // logout(); 
+      }
+    };
+
+    const handleActivity = () => {
+      if (isAuthenticated) {
+        updateActivity();
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("mousemove", handleActivity);
+    document.addEventListener("keydown", handleActivity);
+
+    // Initial activity set
+    if (isAuthenticated) updateActivity();
+
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("mousemove", handleActivity);
+      document.removeEventListener("keydown", handleActivity);
     };
-  }, [isAuthenticated, logout]);
+  }, [isAuthenticated, updateActivity]);
 
   return (
     <Routes>
