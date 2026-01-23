@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useVaultStore } from '../store/vaultStore';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Shield, Lock, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
+import { Shield, Lock, ArrowRight, Loader2, AlertCircle, ChevronLeft } from 'lucide-react';
 
 export default function AuthPage() {
     const { login, signup, isLoading, error, setError } = useVaultStore();
@@ -33,103 +34,134 @@ export default function AuthPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
-            {/* Background Effects */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-600/10 rounded-full blur-[120px]" />
-                <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-600/10 rounded-full blur-[120px]" />
+        <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden selection:bg-primary/30 selection:text-primary">
+            {/* Scanline Overlay */}
+            <div className="pointer-events-none absolute inset-0 z-50 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.03),rgba(0,255,0,0.01),rgba(0,0,255,0.03))] bg-[length:100%_4px,100%_100%] opacity-20" />
+
+            {/* Grid Background */}
+            <div className="absolute inset-0 cyber-grid opacity-20 pointer-events-none" />
+
+            {/* Back to Home Link */}
+            <div className="absolute top-8 left-8 z-20">
+                <Link to="/" className="flex items-center space-x-2 text-[10px] font-bold uppercase tracking-[0.3em] text-primary/60 hover:text-primary transition-all group">
+                    <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                    <span>Return to System Core</span>
+                </Link>
             </div>
 
-            <div className="w-full max-w-md p-8 bg-card/40 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl relative z-10 animate-in fade-in zoom-in-95 duration-500">
-                <div className="flex flex-col items-center mb-8">
-                    <div className="bg-primary/20 p-4 rounded-2xl mb-4 ring-1 ring-primary/30 shadow-[0_0_15px_rgba(var(--primary),0.3)]">
-                        <Shield className="w-8 h-8 text-primary" />
+            {/* Background Glows */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[150px] animate-pulse-slow" />
+            </div>
+
+            <div className="w-full max-w-md p-10 bg-black/60 backdrop-blur-xl border border-primary/20 rounded-sm shadow-[0_0_50px_rgba(0,0,0,0.8)] relative z-10 animate-in fade-in zoom-in-95 duration-500">
+                {/* Corner Accents */}
+                <div className="absolute -top-[1px] -left-[1px] w-8 h-8 border-t-2 border-l-2 border-primary/40" />
+                <div className="absolute -bottom-[1px] -right-[1px] w-8 h-8 border-b-2 border-r-2 border-primary/40" />
+
+                <div className="flex flex-col items-center mb-10">
+                    <div className="bg-primary/10 p-4 rounded-sm mb-6 ring-1 ring-primary/30 shadow-[0_0_20px_rgba(255,176,0,0.15)] relative group cursor-default">
+                        <Shield className="w-10 h-10 text-primary animate-pulse" />
+                        <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tight text-center">ValutX</h1>
-                    <p className="text-muted-foreground text-center mt-2">
-                        {isLogin ? "Unlock your encrypted vault" : "Create your zero-knowledge vault"}
-                    </p>
+                    <h1 className="text-4xl font-black tracking-[0.3em] uppercase text-primary text-glow-amber">ValutX</h1>
+                    <div className="flex items-center gap-2 mt-4 px-3 py-1 bg-primary/5 border border-primary/10 rounded-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                            {isLogin ? "System: Authorization Required" : "System: Vault Initialization"}
+                        </p>
+                    </div>
                 </div>
 
                 {error && (
-                    <div className="mb-6 p-3 bg-red-500/15 border border-red-500/20 rounded-lg flex items-center gap-3 text-red-400 text-sm animate-in slide-in-from-top-2">
+                    <div className="mb-8 p-3 bg-red-500/10 border-l-2 border-red-500 flex items-center gap-3 text-red-500 text-[10px] font-bold uppercase tracking-wider animate-in slide-in-from-top-2">
                         <AlertCircle className="w-4 h-4 shrink-0" />
                         <p>{error}</p>
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium ml-1">Email</label>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Identity Identifier (Email)</label>
                         <Input
                             type="email"
                             required
-                            placeholder="name@example.com"
+                            placeholder="USER@VAULTX.SECURE"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
-                            className="bg-secondary/30 border-white/5 focus:bg-background h-11"
+                            className="bg-white/5 border-white/10 focus:border-primary/50 h-12 rounded-sm font-mono text-xs uppercase tracking-widest placeholder:opacity-30"
                             disabled={isLoading}
                         />
                     </div>
 
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium ml-1">Master Password</label>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Access Protocol (Master Password)</label>
                         <Input
                             type="password"
                             required
                             placeholder="••••••••••••••••"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
-                            className="bg-secondary/30 border-white/5 focus:bg-background h-11 font-mono"
+                            className="bg-white/5 border-white/10 focus:border-primary/50 h-12 rounded-sm font-mono text-xs tracking-[0.3em]"
                             disabled={isLoading}
                         />
                     </div>
 
                     {!isLogin && (
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium ml-1">Confirm Password</label>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground ml-1">Verify Protocol</label>
                             <Input
                                 type="password"
                                 required
                                 placeholder="••••••••••••••••"
                                 value={confirmPassword}
                                 onChange={e => setConfirmPassword(e.target.value)}
-                                className="bg-secondary/30 border-white/5 focus:bg-background h-11 font-mono"
+                                className="bg-white/5 border-white/10 focus:border-primary/50 h-12 rounded-sm font-mono text-xs tracking-[0.3em]"
                                 disabled={isLoading}
                             />
                         </div>
                     )}
 
-                    <Button className="w-full h-11 text-base font-semibold mt-4 shadow-lg shadow-primary/20" disabled={isLoading}>
+                    <Button className="w-full h-12 text-xs font-black uppercase tracking-[0.3em] mt-6 bg-primary hover:bg-primary/80 text-black rounded-sm shadow-[0_0_20px_rgba(255,176,0,0.2)] transition-all active:scale-95" disabled={isLoading}>
                         {isLoading ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                {isLogin ? "Decrypting..." : "Generating Keys..."}
+                                <Loader2 className="mr-3 h-4 w-4 animate-spin" />
+                                {isLogin ? "Decrypting Node..." : "Generating Entropy..."}
                             </>
                         ) : (
                             <>
-                                {isLogin ? 'Unlock Vault' : 'Create Vault'}
-                                <ArrowRight className="ml-2 w-4 h-4" />
+                                {isLogin ? 'Authorize Entry' : 'Initialize Vault'}
+                                <ArrowRight className="ml-3 w-4 h-4" />
                             </>
                         )}
                     </Button>
                 </form>
 
-                <div className="mt-8 text-center">
+                <div className="mt-10 text-center">
                     <button
                         onClick={() => { setError(null); setIsLogin(!isLogin); }}
-                        className="text-sm text-muted-foreground hover:text-primary transition-colors hover:underline underline-offset-4"
+                        className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors hover:underline underline-offset-8"
                         disabled={isLoading}
                     >
-                        {isLogin ? "First time? Create a new vault" : "Already have a vault? Log in"}
+                        {isLogin ? "[ Request New Node Access ]" : "[ Return to Authorization ]"}
                     </button>
                 </div>
             </div>
 
-            <div className="absolute bottom-4 text-center w-full text-xs text-muted-foreground opacity-50">
-                <p className="flex items-center justify-center gap-1">
-                    <Lock className="w-3 h-3" /> End-to-End Encrypted. Zero-Knowledge Architecture.
-                </p>
+            <div className="absolute bottom-8 w-full text-center">
+                <div className="inline-flex items-center gap-6 px-6 py-2 bg-black/40 border border-white/5 rounded-full backdrop-blur-md opacity-40 hover:opacity-100 transition-opacity cursor-default lg:scale-100 scale-75">
+                    <span className="flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest">
+                        <Lock className="w-3 h-3 text-primary" /> Zero-Knowledge Verified
+                    </span>
+                    <div className="w-[1px] h-3 bg-white/20" />
+                    <span className="flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest">
+                        <Shield className="w-3 h-3 text-primary" /> Client-Side Encryption
+                    </span>
+                    <div className="w-[1px] h-3 bg-white/20" />
+                    <span className="flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-flicker" /> Node Active
+                    </span>
+                </div>
             </div>
         </div>
     );
