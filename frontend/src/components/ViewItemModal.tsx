@@ -8,15 +8,28 @@ interface Props {
     item: DecryptedVaultItem | null;
     onClose: () => void;
     onDelete: (id: string) => void;
+    onEdit: () => void;
 }
 
-export default function ViewItemModal({ item, onClose, onDelete }: Props) {
+export default function ViewItemModal({ item, onClose, onDelete, onEdit }: Props) {
     const [showPassword, setShowPassword] = useState(false);
+    const [clipboardMsg, setClipboardMsg] = useState<string | null>(null);
 
     if (!item) return null;
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
+        setClipboardMsg("Copied! Clearing in 30s...");
+        setTimeout(() => setClipboardMsg(null), 3000); // Hide toast after 3s
+
+        // Auto-clear
+        setTimeout(() => {
+            navigator.clipboard.readText().then(currentText => {
+                if (currentText === text) {
+                    navigator.clipboard.writeText("");
+                }
+            }).catch(err => console.error("Clipboard read failed", err));
+        }, 30000);
     };
 
     const handleDelete = () => {
@@ -33,7 +46,14 @@ export default function ViewItemModal({ item, onClose, onDelete }: Props) {
                     <X className="w-5 h-5" />
                 </button>
 
-                <div className="mb-6 pr-8">
+                <div className="mb-6 pr-8 relative">
+                    {clipboardMsg && (
+                        <div className="absolute top-[-40px] left-0 right-0 text-center">
+                            <span className="bg-primary/90 text-primary-foreground text-xs px-2 py-1 rounded-full shadow-lg transition-all animate-in fade-in slide-in-from-bottom-2">
+                                {clipboardMsg}
+                            </span>
+                        </div>
+                    )}
                     <h2 className="text-xl font-bold">{item.data.name}</h2>
                     <p className="text-xs text-muted-foreground uppercase tracking-wider mt-1">{item.type}</p>
                 </div>
@@ -75,9 +95,14 @@ export default function ViewItemModal({ item, onClose, onDelete }: Props) {
                 </div>
 
                 <div className="flex justify-between pt-6 mt-2 border-t border-border">
-                    <Button variant="destructive" size="sm" onClick={handleDelete} className="text-red-400 hover:text-red-300">
-                        <Trash2 className="w-4 h-4 mr-2" /> Delete
-                    </Button>
+                    <div className="flex space-x-2">
+                        <Button variant="destructive" size="sm" onClick={handleDelete} className="text-red-400 hover:text-red-300">
+                            <Trash2 className="w-4 h-4 mr-2" /> Delete
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={onEdit}>
+                            Edit
+                        </Button>
+                    </div>
                     <Button onClick={onClose}>Close</Button>
                 </div>
             </div>

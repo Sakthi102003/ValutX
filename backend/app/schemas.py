@@ -15,6 +15,11 @@ class UserLogin(BaseModel):
     email: EmailStr
     auth_hash_derived: str
 
+class UserRotateKey(BaseModel):
+    auth_hash_derived: str = Field(..., description="The new hash derived from New Master Password")
+    kdf_salt: str = Field(..., description="New random salt")
+    encrypted_dek: str = Field(..., description="The Data Encryption Key re-encrypted by the new KEK")
+
 class UserResponse(BaseModel):
     id: UUID
     email: EmailStr

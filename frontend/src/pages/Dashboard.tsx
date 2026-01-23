@@ -3,18 +3,21 @@ import { useVaultStore } from '../store/vaultStore';
 import type { VaultItemType, DecryptedVaultItem } from '../store/vaultStore';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Lock, LogOut, Plus, Search, CreditCard, Key, FileText, User, ShieldAlert, Shield } from 'lucide-react';
+import { Lock, LogOut, Plus, Search, CreditCard, Key, FileText, User, ShieldAlert, Shield, Settings } from 'lucide-react';
 import { cn } from '../lib/utils';
 import NewItemModal from '../components/NewItemModal';
 import ViewItemModal from '../components/ViewItemModal';
+import SettingsPage from './SettingsPage';
 
 export default function Dashboard() {
-    const { logout, panicLock, decryptedItems, addItem, deleteItem, fetchItems, userEmail } = useVaultStore();
+    const { logout, panicLock, decryptedItems, addItem, updateItem, deleteItem, fetchItems, userEmail } = useVaultStore();
     const [activeTab, setActiveTab] = useState<VaultItemType | 'all'>('all');
+    const [view, setView] = useState<'items' | 'settings'>('items');
     const [search, setSearch] = useState('');
 
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [viewingItem, setViewingItem] = useState<DecryptedVaultItem | null>(null);
+    const [editingItem, setEditingItem] = useState<DecryptedVaultItem | null>(null);
 
     // Initial Fetch
     // We should fetch if list is empty? Or always on mount?
@@ -27,10 +30,23 @@ export default function Dashboard() {
         }
     }, [fetchItems, decryptedItems.length]);
 
-    // Handle Add
-    const handleAddItem = async (type: VaultItemType, data: any) => {
-        await addItem(type, data);
+    // Handle Add / Edit
+    const handleSaveItem = async (type: VaultItemType, data: any, id?: string) => {
+        if (id) {
+            await updateItem(id, type, data);
+        } else {
+            await addItem(type, data);
+        }
         setIsAddOpen(false);
+        setEditingItem(null);
+    }
+
+    const handleEditItem = () => {
+        if (viewingItem) {
+            setEditingItem(viewingItem);
+            setViewingItem(null);
+            setIsAddOpen(true);
+        }
     }
 
     // Handle Delete
@@ -66,11 +82,21 @@ export default function Dashboard() {
                 </div>
 
                 <nav className="flex-1 space-y-1">
-                    <SidebarItem icon={<Key className="w-4 h-4" />} label="All Items" active={activeTab === 'all'} onClick={() => setActiveTab('all')} count={decryptedItems.length} />
-                    <SidebarItem icon={<User className="w-4 h-4" />} label="Logins" active={activeTab === 'login'} onClick={() => setActiveTab('login')} count={decryptedItems.filter(i => i.type === 'login').length} />
-                    <SidebarItem icon={<CreditCard className="w-4 h-4" />} label="Cards" active={activeTab === 'card'} onClick={() => setActiveTab('card')} count={decryptedItems.filter(i => i.type === 'card').length} />
-                    <SidebarItem icon={<FileText className="w-4 h-4" />} label="Notes" active={activeTab === 'note'} onClick={() => setActiveTab('note')} count={decryptedItems.filter(i => i.type === 'note').length} />
+                    <SidebarItem icon={<Key className="w-4 h-4" />} label="All Items" active={view === 'items' && activeTab === 'all'} onClick={() => { setView('items'); setActiveTab('all'); }} count={decryptedItems.length} />
+                    <SidebarItem icon={<User className="w-4 h-4" />} label="Logins" active={view === 'items' && activeTab === 'login'} onClick={() => { setView('items'); setActiveTab('login'); }} count={decryptedItems.filter(i => i.type === 'login').length} />
+                    <SidebarItem icon={<CreditCard className="w-4 h-4" />} label="Cards" active={view === 'items' && activeTab === 'card'} onClick={() => { setView('items'); setActiveTab('card'); }} count={decryptedItems.filter(i => i.type === 'card').length} />
+                    <SidebarItem icon={<FileText className="w-4 h-4" />} label="Notes" active={view === 'items' && activeTab === 'note'} onClick={() => { setView('items'); setActiveTab('note'); }} count={decryptedItems.filter(i => i.type === 'note').length} />
                 </nav>
+
+                <div className="px-2 py-2">
+                    <SidebarItem
+                        icon={<Settings className="w-4 h-4" />}
+                        label="Settings"
+                        active={view === 'settings'}
+                        onClick={() => setView('settings')}
+                        count={0}
+                    />
+                </div>
 
                 <div className="pt-4 border-t border-white/5 space-y-2">
                     <Button variant="ghost" className="w-full justify-start hover:bg-red-500/10 hover:text-red-400 group transition-all" onClick={panicLock}>
@@ -108,71 +134,79 @@ export default function Dashboard() {
                 </header>
 
                 {/* Scrollable Content */}
-                <div className="flex-1 overflow-auto p-8 scrollbar-hide">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold capitalize tracking-tight text-white/90">
-                            {activeTab === 'all' ? 'All Items' : activeTab + 's'}
-                        </h2>
-                        <span className="text-muted-foreground text-sm">{filteredItems.length} items</span>
+                {view === 'settings' ? (
+                    <div className="flex-1 overflow-auto scrollbar-hide">
+                        <SettingsPage />
                     </div>
-
-                    {filteredItems.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-96 text-muted-foreground border-2 border-dashed border-white/5 rounded-2xl bg-white/5">
-                            <div className="bg-secondary/50 p-4 rounded-full mb-4">
-                                <Search className="w-8 h-8 opacity-50" />
-                            </div>
-                            <p className="text-lg font-medium">No items found</p>
-                            {search ? <p className="text-sm opacity-50">Try a different search term</p> : <p className="text-sm opacity-50">Add your first item to get started</p>}
+                ) : (
+                    <div className="flex-1 overflow-auto p-8 scrollbar-hide">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-bold capitalize tracking-tight text-white/90">
+                                {activeTab === 'all' ? 'All Items' : activeTab + 's'}
+                            </h2>
+                            <span className="text-muted-foreground text-sm">{filteredItems.length} items</span>
                         </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {filteredItems.map(item => (
-                                <div
-                                    key={item.id}
-                                    onClick={() => setViewingItem(item)}
-                                    className="p-5 border border-white/5 rounded-2xl bg-card/40 backdrop-blur-sm hover:bg-card/60 hover:border-primary/30 transition-all cursor-pointer group shadow-lg hover:shadow-primary/5 relative overflow-hidden"
-                                >
-                                    <div className="absolute top-0 right-0 p-2 bg-gradient-to-bl from-white/5 to-transparent rounded-bl-2xl opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <span className="sr-only">View</span>
-                                    </div>
 
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className={cn(
-                                            "p-3 rounded-xl ring-1 ring-inset ring-white/10 shadow-inner",
-                                            item.type === 'login' && "bg-blue-500/10 text-blue-400",
-                                            item.type === 'card' && "bg-purple-500/10 text-purple-400",
-                                            item.type === 'note' && "bg-yellow-500/10 text-yellow-400",
-                                            item.type === 'id' && "bg-green-500/10 text-green-400",
-                                        )}>
-                                            {item.type === 'login' && <User className="w-6 h-6" />}
-                                            {item.type === 'card' && <CreditCard className="w-6 h-6" />}
-                                            {item.type === 'note' && <FileText className="w-6 h-6" />}
-                                            {item.type === 'id' && <Shield className="w-6 h-6" />}
-                                        </div>
-                                        <span className="text-[10px] text-muted-foreground bg-secondary/50 px-2 py-1 rounded-full">{new Date(item.createdAt).toLocaleDateString()}</span>
-                                    </div>
-                                    <h3 className="font-semibold text-lg truncate pr-2 mb-1 group-hover:text-primary transition-colors">{item.data.name || "Untitled"}</h3>
-                                    <p className="text-sm text-muted-foreground truncate font-mono opacity-70">
-                                        {item.type === 'login' ? item.data.username : item.type === 'card' ? `•••• ${item.data.number?.slice(-4) || ''}` : item.type === 'id' ? item.data.number : "Secure Note"}
-                                    </p>
+                        {filteredItems.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-96 text-muted-foreground border-2 border-dashed border-white/5 rounded-2xl bg-white/5">
+                                <div className="bg-secondary/50 p-4 rounded-full mb-4">
+                                    <Search className="w-8 h-8 opacity-50" />
                                 </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                                <p className="text-lg font-medium">No items found</p>
+                                {search ? <p className="text-sm opacity-50">Try a different search term</p> : <p className="text-sm opacity-50">Add your first item to get started</p>}
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {filteredItems.map(item => (
+                                    <div
+                                        key={item.id}
+                                        onClick={() => setViewingItem(item)}
+                                        className="p-5 border border-white/5 rounded-2xl bg-card/40 backdrop-blur-sm hover:bg-card/60 hover:border-primary/30 transition-all cursor-pointer group shadow-lg hover:shadow-primary/5 relative overflow-hidden"
+                                    >
+                                        <div className="absolute top-0 right-0 p-2 bg-gradient-to-bl from-white/5 to-transparent rounded-bl-2xl opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span className="sr-only">View</span>
+                                        </div>
+
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className={cn(
+                                                "p-3 rounded-xl ring-1 ring-inset ring-white/10 shadow-inner",
+                                                item.type === 'login' && "bg-blue-500/10 text-blue-400",
+                                                item.type === 'card' && "bg-purple-500/10 text-purple-400",
+                                                item.type === 'note' && "bg-yellow-500/10 text-yellow-400",
+                                                item.type === 'id' && "bg-green-500/10 text-green-400",
+                                            )}>
+                                                {item.type === 'login' && <User className="w-6 h-6" />}
+                                                {item.type === 'card' && <CreditCard className="w-6 h-6" />}
+                                                {item.type === 'note' && <FileText className="w-6 h-6" />}
+                                                {item.type === 'id' && <Shield className="w-6 h-6" />}
+                                            </div>
+                                            <span className="text-[10px] text-muted-foreground bg-secondary/50 px-2 py-1 rounded-full">{new Date(item.createdAt).toLocaleDateString()}</span>
+                                        </div>
+                                        <h3 className="font-semibold text-lg truncate pr-2 mb-1 group-hover:text-primary transition-colors">{item.data.name || "Untitled"}</h3>
+                                        <p className="text-sm text-muted-foreground truncate font-mono opacity-70">
+                                            {item.type === 'login' ? item.data.username : item.type === 'card' ? `•••• ${item.data.number?.slice(-4) || ''}` : item.type === 'id' ? item.data.number : "Secure Note"}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </main>
 
             {/* Modals */}
             <NewItemModal
                 isOpen={isAddOpen}
-                onClose={() => setIsAddOpen(false)}
-                onSave={handleAddItem}
+                onClose={() => { setIsAddOpen(false); setEditingItem(null); }}
+                onSave={handleSaveItem}
+                initialData={editingItem}
             />
 
             <ViewItemModal
                 item={viewingItem}
                 onClose={() => setViewingItem(null)}
                 onDelete={handleDeleteItem}
+                onEdit={handleEditItem}
             />
         </div>
     );

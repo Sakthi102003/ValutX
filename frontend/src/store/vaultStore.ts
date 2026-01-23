@@ -8,7 +8,8 @@ import {
     unwrapDEK,
     encryptVaultItem,
     decryptVaultItem,
-    generateSalt
+    generateSalt,
+    type EncryptedBlob
 } from '../utils/crypto';
 
 // Constants
@@ -31,6 +32,8 @@ interface VaultState {
     isLocked: boolean;
     isAuthenticated: boolean;
     userEmail: string | null;
+    kdfSalt: string | null;
+    encryptedDek: EncryptedBlob | null; // Stored to verify old password during rotation
     dek: CryptoKey | null; // Data Encryption Key (Held in RAM only)
     decryptedItems: DecryptedVaultItem[];
     isLoading: boolean;
@@ -40,11 +43,13 @@ interface VaultState {
     setError: (msg: string | null) => void;
     signup: (email: string, password: string) => Promise<boolean>;
     login: (email: string, password: string) => Promise<boolean>;
+    changeMasterPassword: (oldPw: string, newPw: string) => Promise<boolean>;
     logout: () => void;
     panicLock: () => void;
 
     // Vault Operations
     addItem: (type: VaultItemType, data: any) => Promise<void>;
+    updateItem: (id: string, type: VaultItemType, data: any) => Promise<void>;
     deleteItem: (id: string) => Promise<void>;
     fetchItems: () => Promise<void>;
 }
@@ -53,6 +58,8 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     isLocked: true,
     isAuthenticated: false,
     userEmail: null,
+    kdfSalt: null,
+    encryptedDek: null,
     dek: null,
     decryptedItems: [],
     isLoading: false,
@@ -100,6 +107,8 @@ export const useVaultStore = create<VaultState>((set, get) => ({
                 isLocked: false,
                 userEmail: email,
                 dek: dek,
+                kdfSalt: saltStr,
+                encryptedDek: wrappedDek, // New user has this
                 decryptedItems: []
             });
 
@@ -148,7 +157,9 @@ export const useVaultStore = create<VaultState>((set, get) => ({
                 isAuthenticated: true,
                 isLocked: false,
                 userEmail: email,
-                dek: dek
+                dek: dek,
+                kdfSalt: saltStr,
+                encryptedDek: encryptedDekObj,
             });
 
             // 5. Fetch Items
@@ -218,6 +229,88 @@ export const useVaultStore = create<VaultState>((set, get) => ({
         };
 
         set({ decryptedItems: [...decryptedItems, newDecrypted] });
+    },
+
+    updateItem: async (id, type, data) => {
+        const { dek, decryptedItems } = get();
+        if (!dek) throw new Error("Vault is locked");
+
+        const { cipherText, iv } = await encryptVaultItem(data, dek);
+
+        const res = await axios.put(`${API_URL}/vault/${id}`, {
+            enc_data: cipherText,
+            iv: iv,
+            auth_tag: ""
+        });
+
+        // Update local state
+        const updatedList = decryptedItems.map(item => {
+            if (item.id === id) {
+                return { ...item, data, type };
+            }
+            return item;
+        });
+
+        set({ decryptedItems: updatedList });
+    },
+
+    changeMasterPassword: async (oldPw, newPw) => {
+        set({ isLoading: true, error: null });
+        const { kdfSalt, encryptedDek, dek } = get();
+
+        if (!kdfSalt || !encryptedDek || !dek) {
+            set({ isLoading: false, error: "Session invalid. Please relogin." });
+            return false;
+        }
+
+        try {
+            // 1. Verify Old Password
+            // Try to unwrap DEK with Old Password
+            const oldKek = await deriveKEK(oldPw, kdfSalt);
+            try {
+                await unwrapDEK(encryptedDek.cipherText, encryptedDek.iv, oldKek);
+            } catch (e) {
+                throw new Error("Old password is incorrect");
+            }
+
+            // 2. Generate New Keys
+            const newSalt = generateSalt();
+            const toBase64 = (buffer: ArrayBuffer) => {
+                let binary = '';
+                const bytes = new Uint8Array(buffer);
+                const len = bytes.byteLength;
+                for (let i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]);
+                return window.btoa(binary);
+            };
+            const newSaltStr = toBase64(newSalt.buffer as ArrayBuffer);
+
+            const newKek = await deriveKEK(newPw, newSaltStr);
+            const newWrappedDek = await wrapDEK(dek, newKek); // Wrap EXISTING DEK with NEW KEK
+            const newAuthHash = await deriveAuthKey(newPw, newSaltStr);
+
+            const newEncryptedDekStr = JSON.stringify(newWrappedDek);
+
+            // 3. Send to server
+            await axios.put(`${API_URL}/auth/rotate-key`, {
+                auth_hash_derived: newAuthHash,
+                kdf_salt: newSaltStr,
+                encrypted_dek: newEncryptedDekStr
+            });
+
+            // 4. Update Store
+            set({
+                kdfSalt: newSaltStr,
+                encryptedDek: newWrappedDek
+            });
+
+            return true;
+        } catch (e: any) {
+            console.error(e);
+            set({ error: e.message || "Failed to change password" });
+            return false;
+        } finally {
+            set({ isLoading: false });
+        }
     },
 
     deleteItem: async (id) => {

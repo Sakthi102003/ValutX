@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import type { VaultItemType } from '../store/vaultStore';
+import { useState, useEffect } from 'react';
+import type { VaultItemType, DecryptedVaultItem } from '../store/vaultStore';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Label } from './ui/Label';
@@ -8,18 +8,49 @@ import { X, RefreshCw } from 'lucide-react';
 interface Props {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (type: VaultItemType, data: any) => void;
+    onSave: (type: VaultItemType, data: any, id?: string) => void;
+    initialData?: DecryptedVaultItem | null;
 }
 
-export default function NewItemModal({ isOpen, onClose, onSave }: Props) {
+const calculateStrength = (password: string) => {
+    if (!password) return { score: 0, label: '', color: 'bg-transparent' };
+    let score = 0;
+    if (password.length > 8) score++;
+    if (password.length > 12) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    // Cap at 4
+    if (score > 4) score = 4;
+
+    const labels = ['Weak', 'Fair', 'Good', 'Strong', 'Excellent'];
+    const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
+
+    return { score, label: labels[score], color: colors[score] };
+};
+
+export default function NewItemModal({ isOpen, onClose, onSave, initialData }: Props) {
     const [type, setType] = useState<VaultItemType>('login');
     const [formData, setFormData] = useState<any>({});
+
+    useEffect(() => {
+        if (isOpen) {
+            if (initialData) {
+                setType(initialData.type);
+                setFormData(initialData.data);
+            } else {
+                setFormData({});
+                setType('login');
+            }
+        }
+    }, [isOpen, initialData]);
 
     if (!isOpen) return null;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(type, { ...formData, name: formData.name || "Untitled" });
+        onSave(type, { ...formData, name: formData.name || "Untitled" }, initialData?.id);
         setFormData({});
         onClose();
     };
@@ -41,7 +72,7 @@ export default function NewItemModal({ isOpen, onClose, onSave }: Props) {
                     <X className="w-5 h-5" />
                 </button>
 
-                <h2 className="text-xl font-bold mb-6">Add New Item</h2>
+                <h2 className="text-xl font-bold mb-6">{initialData ? 'Edit Item' : 'Add New Item'}</h2>
 
                 <div className="flex space-x-2 mb-6 p-1 bg-secondary/50 rounded-lg w-fit">
                     {(['login', 'card', 'note'] as VaultItemType[]).map(t => (
@@ -92,6 +123,19 @@ export default function NewItemModal({ isOpen, onClose, onSave }: Props) {
                                         <RefreshCw className="w-4 h-4" />
                                     </Button>
                                 </div>
+                                {formData.password && (
+                                    <div className="mt-2 space-y-1">
+                                        <div className="flex h-1.5 w-full bg-secondary/50 rounded-full overflow-hidden">
+                                            <div
+                                                className={`h-full transition-all duration-300 ${calculateStrength(formData.password).color}`}
+                                                style={{ width: `${(calculateStrength(formData.password).score + 1) * 20}%` }}
+                                            />
+                                        </div>
+                                        <p className="text-[10px] text-right text-muted-foreground uppercase font-bold tracking-wider">
+                                            {calculateStrength(formData.password).label}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label>Website</Label>
