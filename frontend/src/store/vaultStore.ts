@@ -13,7 +13,7 @@ import {
 } from '../utils/crypto';
 
 // Constants
-const API_URL = 'http://localhost:8000/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
 // Check for array buffer conversion helper availability or use simpler approach
 // In crypto.ts we used base64 strings for everything.

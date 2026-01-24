@@ -19,7 +19,8 @@ export default function SecurityAudit() {
     useEffect(() => {
         const fetchLogs = async () => {
             try {
-                const res = await axios.get('http://localhost:8000/api/v1/audit/');
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+                const res = await axios.get(`${API_URL}/audit/`);
                 setLogs(res.data);
             } catch (err) {
                 console.error("Failed to fetch audit logs", err);
