@@ -1,116 +1,120 @@
 # ValutX - Next-Generation Zero-Knowledge Password Manager
 
-> **Status:** 🚧 **In Active Development** (MVP Complete. Refining Advanced Security Features)
+<div align="center">
 
-## 🛡️ Project Overview
+![Project License](https://img.shields.io/badge/license-MIT-00FFA3?style=for-the-badge)
+![React](https://img.shields.io/badge/Frontend-React%2018-00D1FF?style=for-the-badge&logo=react)
+![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009485?style=for-the-badge&logo=fastapi)
+![Security](https://img.shields.io/badge/Security-Zero--Knowledge-FF9D00?style=for-the-badge&logo=securityscorecard)
 
-ValutX is a security-first, full-stack web application that demonstrates a **Zero-Knowledge Architecture**. Unlike traditional web apps, ValutX performs all cryptographic operations (Encryption, Decryption, Key Derivation) entirely in the browser. 
+**Secure. Stealthy. Sovereign.**
+*The ultimate tactical vault for your digital identity.*
 
-**The server never sees:**
-- Your Master Password
-- Your Encryption Keys
-- Your Plaintext Data (Passwords, Cards, Notes, IDs)
+</div>
 
-The backend acts solely as a "blind" storage provider, synchronizing encrypted data blobs across devices.
+---
 
-## 🚀 Core Features
+## 🛡️ The Zero-Knowledge Promise
 
--   **Zero-Knowledge Security:** Data is encrypted/decrypted only on the client device using the **Web Crypto API**.
--   **Tactical Cyber Aesthetics:** A premium, high-security terminal aesthetic featuring "Cyber-Noir" and "Industrial Stealth" elements, glassmorphism, and scanline overlays.
--   **Military-Grade Encryption:** Uses **AES-256-GCM** for data blobs and **PBKDF2** for robust key derivation.
--   **Entropy Forge (Password Generator):** Advanced password generation with real-time entropy analysis (bits of security) and "Tactical Grade" strength indicators.
--   **Protocol Rotation:** Secure Master Password changes that re-encrypt the Data Encryption Key (DEK) without losing access to your vault.
--   **Panic Protocol:** A dedicated "Kill Switch" to instantly purge all decrypted data from memory and terminate the session.
--   **Smart Clipboard Safeguards:** Automatic clipboard clearing after 30 seconds to prevent sensitive data exposure.
--   **Data Sovereignty:** Built-in Export/Import tools for maintaining local encrypted backups as JSON archives.
+**ValutX** is a security-first, full-stack web application built on the principle of absolute privacy. Unlike traditional password managers, ValutX implements a **Thick Client Cryptography** model where the server is completely "blind" to your secrets.
 
-## 🛠️ Tech Stack
+- **Zero-Trust Storage:** All data is encrypted using AES-256-GCM before it ever leaves your browser.
+- **Client-Side Derivation:** Master passwords never travel over the wire. Keys are derived locally using PBKDF2.
+- **Privacy by Design:** The backend stores only opaque, encrypted blobs and handles authentication via independent salt-derived hashes.
 
-### Frontend (Client-Side)
--   **Framework:** React 18 + Vite
--   **Language:** TypeScript
--   **Styling:** Tailwind CSS + Custom Design System
--   **Cryptography:** Web Crypto API (Native Browser Standards)
--   **State:** Zustand (Transient secure memory storage)
+---
 
-### Backend (Server-Side)
--   **Framework:** FastAPI (Python 3.10+)
--   **Database:** SQLite (with SQLAlchemy ORM)
--   **Authentication:** JWT (Access/Refresh Tokens) - *Authenticated via independent Auth Key*
--   **Validation:** Pydantic
+## ⚡ Tactical Features
 
-## 🏗️ Architecture
+### 🛠️ Elite Security
+- **Military-Grade Encryption:** AES-256-GCM authenticated encryption for all vault items (Passwords, Identities, Notes).
+- **Entropy Forge:** A high-precision password generator with real-time bit-strength analysis and tactical indicators.
+- **Protocol Rotation:** Securely update your Master Password via re-wrapping protocols without losing data.
+- **Smart Clipboard:** Auto-purging clipboard logic to minimize sensitive data footprint (30s TTL).
 
-The system follows a "Thick Client" cryptography model:
+### 🖥️ Tactical UI/UX
+- **Industrial Stealth Theme:** A premium "Cyber-Noir" interface featuring high-contrast amber accents, glassmorphism, and scanline overlays.
+- **Panic Protocol:** A dedicated kill-switch that instantly purges all decrypted data from memory and terminates the session.
+- **Fluid Workflows:** Intuitive management of disparate secret types with modular vault components.
+
+---
+
+## 🏗️ Technical Architecture
+
+ValutX operates on a unique dual-key derivation system to ensure the server cannot decrypt your data even if it's compromised.
 
 ```mermaid
 graph TD
-    User[User] -->|Master Password| Client[Client Browser]
-    Client -->|Derive KEK & AuthKey| Client
-    Client -- AuthKey (Hash) --> Server[FastAPI Backend]
-    Client -- Encrypted Blob (AES-256-GCM) --> Server
-    Server -- Encrypted Blob --> DB[(Database)]
+    User["👤 User (Master Password)"] --> KDF["⚙️ PBKDF2 (Client)"]
+    KDF --> AuthKey["🔑 Auth Key (Session Control)"]
+    KDF --> KEK["🔑 KEK (Key Encryption Key)"]
     
-    style User fill:#f9f,stroke:#333,stroke-width:2px
-    style Client fill:#bbf,stroke:#333,stroke-width:2px
-    style Server fill:#bfb,stroke:#333,stroke-width:2px
+    KEK -->|Unwraps| DEK["📦 DEK (Data Encryption Key)"]
+    DEK -->|Encrypts/Decrypts| Secrets["🔒 Private Data"]
+    
+    AuthKey -->|Hashed| API["🌐 FastAPI Backend"]
+    API -->|Stores| Blob["🗄️ Encrypted Blobs (SQLite)"]
+    
+    style User fill:#0a0a0a,stroke:#FF9D00,color:#fff
+    style KDF fill:#1a1a1a,stroke:#00D1FF,color:#fff
+    style Secrets fill:#0a4a0a,stroke:#00FFA3,color:#fff
+    style API fill:#1a1a1a,stroke:#00D1FF,color:#fff
 ```
 
 ### Key Management Flow
-1.  **Identity Derivation:** Master Password + Salt results in two distinct keys:
-    -   **Auth Key:** Used for session authentication (hashed again on server).
-    -   **KEK (Key Encryption Key):** Used only to unwrap the DEK.
-2.  **Data Isolation:**
-    -   **DEK (Data Encryption Key):** A random AES-256 key that encrypts all vault items. Stored as an "Encrypted Blob" wrapped by the KEK.
-3.  **Memory Security:** Decrypted items reside only in React/Zustand state; the "Panic Mode" triggers a full state purge.
+1. **Separation of Concerns:** From your Master Password, we derive an *Auth Key* for logging in and a *KEK* for data access. They are cryptographically distinct.
+2. **Data Isolation:** The *DEK* stays wrapped until you unlock the vault. Decrypted items reside only in transient memory (`Zustand` state).
+3. **Session Purging:** Any logout or inactivity trigger wipes the state, leaving NO traces of your secrets in the browser's RAM.
 
-## 📂 Project Structure
+---
+
+## 📂 Project Anatomy
 
 ```bash
 ValutX/
-├── frontend/        # React + Vite Frontend
+├── frontend/           # React 18 + Vite (Tailwind CSS)
 │   ├── src/
-│   │   ├── components/  # EntropyForge, Modals, Tactical UI
-│   │   ├── pages/       # Dashboard, Setup, Auth, Unlock
-│   │   ├── store/       # vaultStore.ts (Memory Management)
-│   │   ├── utils/       # crypto.ts (Core WebCrypto Logic)
-│   │   └── App.tsx
-│   ├── public/
-│   └── package.json
-├── backend/         # FastAPI Backend
+│   │   ├── components/ # EntropyForge, PanicBtn, TacticalModals
+│   │   ├── utils/      # crypto.ts (The WebCrypto brain)
+│   │   └── store/      # vaultStore.ts (Transient memory management)
+├── backend/            # FastAPI + Python 3.10
 │   ├── app/
-│   │   ├── api/         # v1/endpoints (auth, vault)
-│   │   ├── core/        # Security & Config
-│   │   ├── models/      # SQLAlchemy User & Vault schemas
-│   │   └── schemas/     # Pydantic validation
-│   ├── main.py      
-│   └── requirements.txt
-├── ARCHITECTURE.md
-└── README.md
+│   │   ├── api/        # Secure endpoints (auth/vault)
+│   │   └── core/       # Pydantic models & logic
+└── ARCHITECTURE.md     # Deep-dive security specs
 ```
 
-## ⚡ Getting Started
+---
+
+## 🚀 Deployment & Setup
 
 ### Prerequisites
--   Node.js 18+
--   Python 3.10+
+- **Node.js 18+**
+- **Python 3.10+**
 
-### 1. Frontend Setup
+### 1️⃣ Pulse Check (Backend)
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+### 2️⃣ Interface Activation (Frontend)
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### 2. Backend Setup
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
+---
 
-## ⚠️ Disclaimer
+## ⚠️ Security Disclaimer
 
-This is a **Portfolio / Reference Implementation** intended to demonstrate advanced security concepts. While it uses industry-standard algorithms (AES-GCM, PBKDF2), production use requires formal security audits, Web Assembly implementations of Argon2, and more rigorous memory handling techniques.
+ValutX is a **Portfolio / Reference Implementation** designed to showcase advanced cryptographic workflows. While it uses industry-standard algorithms (AES-GCM, PBKDF2), production environments require additional audits, hardened memory handling, and WebAssembly-based Argon2 implementations for maximum entropy protection.
+
+---
+<div align="center">
+Built with ⚡ by ValutX Security Lab
+</div>
