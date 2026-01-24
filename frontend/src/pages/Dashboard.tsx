@@ -4,18 +4,19 @@ import { useVaultStore } from '../store/vaultStore';
 import type { VaultItemType, DecryptedVaultItem } from '../store/vaultStore';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Lock, LogOut, Plus, Search, CreditCard, Key, FileText, User, ShieldAlert, Shield, Settings, Zap } from 'lucide-react';
+import { Lock, LogOut, Plus, Search, CreditCard, Key, FileText, User, ShieldAlert, Shield, Settings, Zap, Activity } from 'lucide-react';
 import { cn } from '../lib/utils';
 import NewItemModal from '../components/NewItemModal';
 import ViewItemModal from '../components/ViewItemModal';
 import PasswordGenerator from '../components/PasswordGenerator';
 import SettingsPage from './SettingsPage';
 import PanicOverlay from '../components/PanicOverlay';
+import SecurityAudit from '../components/SecurityAudit';
 
 export default function Dashboard() {
     const { logout, panicLock, decryptedItems, addItem, updateItem, deleteItem, fetchItems, userEmail, clipboardStatus, settings, isPanicking } = useVaultStore();
     const [activeTab, setActiveTab] = useState<VaultItemType | 'all'>('all');
-    const [view, setView] = useState<'items' | 'settings' | 'generator'>('items');
+    const [view, setView] = useState<'items' | 'settings' | 'generator' | 'audit'>('items');
     const [search, setSearch] = useState('');
 
     const [isAddOpen, setIsAddOpen] = useState(false);
@@ -127,6 +128,7 @@ export default function Dashboard() {
                     <SidebarItem icon={<User className="w-4 h-4" />} label="Auth Credentials" active={view === 'items' && activeTab === 'login'} onClick={() => { setView('items'); setActiveTab('login'); }} count={decryptedItems.filter(i => i.type === 'login').length} />
                     <SidebarItem icon={<CreditCard className="w-4 h-4" />} label="Financial Keys" active={view === 'items' && activeTab === 'card'} onClick={() => { setView('items'); setActiveTab('card'); }} count={decryptedItems.filter(i => i.type === 'card').length} />
                     <SidebarItem icon={<FileText className="w-4 h-4" />} label="Secure Data" active={view === 'items' && activeTab === 'note'} onClick={() => { setView('items'); setActiveTab('note'); }} count={decryptedItems.filter(i => i.type === 'note').length} />
+                    <SidebarItem icon={<Activity className="w-4 h-4" />} label="Security Audit" active={view === 'audit'} onClick={() => setView('audit')} count={0} />
                     <SidebarItem icon={<Zap className="w-4 h-4" />} label="Entropy Forge" active={view === 'generator'} onClick={() => setView('generator')} count={0} />
                 </nav>
 
@@ -177,10 +179,10 @@ export default function Dashboard() {
                                 <span>Generator Active // No Search Range</span>
                             </div>
                         )}
-                        {view === 'settings' && (
+                        {view === 'audit' && (
                             <div className="flex items-center space-x-2 text-primary/40 font-mono text-[10px] uppercase tracking-widest">
-                                <Settings className="w-3 h-3" />
-                                <span>System Config // Local Node</span>
+                                <Activity className="w-3 h-3" />
+                                <span>Security Logs // Encrypted Stream</span>
                             </div>
                         )}
                     </div>
@@ -199,6 +201,10 @@ export default function Dashboard() {
                 ) : view === 'generator' ? (
                     <div className="flex-1 overflow-auto scrollbar-hide">
                         <PasswordGenerator />
+                    </div>
+                ) : view === 'audit' ? (
+                    <div className="flex-1 overflow-auto scrollbar-hide">
+                        <SecurityAudit />
                     </div>
                 ) : (
                     <div className="flex-1 overflow-auto p-8 scrollbar-hide relative group/content">

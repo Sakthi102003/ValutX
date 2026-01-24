@@ -1,8 +1,8 @@
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1.endpoints import auth, vault
+from app.api.v1.endpoints import auth, vault, audit
 from app.db.session import engine, Base
-from app.models import user, item # Ensure models are imported to register with MetaData
+from app.models import user, item, audit as audit_model
 
 # Create Tables
 Base.metadata.create_all(bind=engine)
@@ -16,7 +16,7 @@ app = FastAPI(
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"], # Frontend ports
+    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"], # Frontend ports
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,6 +25,7 @@ app.add_middleware(
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["Auth"])
 api_router.include_router(vault.router, prefix="/vault", tags=["Vault"])
+api_router.include_router(audit.router, prefix="/audit", tags=["Audit"])
 
 app.include_router(api_router, prefix="/api/v1")
 

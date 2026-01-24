@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, Text
+from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Integer
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 import uuid
@@ -23,6 +23,7 @@ class VaultItem(Base):
     
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     last_modified = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    version = Column(Integer, default=1, nullable=False)
     
     # Relationships
     owner = relationship("User", backref="items")

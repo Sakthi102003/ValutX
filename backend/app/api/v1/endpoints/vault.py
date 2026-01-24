@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from sqlalchemy.orm import Session
 from typing import List, Any
 from app.schemas import VaultItemCreate, VaultItemResponse, VaultItemUpdate
@@ -6,32 +6,10 @@ from app.models.item import VaultItem
 from app.models.user import User
 from app.db.session import get_db
 from app.core import security
-from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
-from app.core.config import settings
+from app.api.deps import get_current_user
+from app.utils.security_logging import log_event
 
 router = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
-
-# Dependency to get current user
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
-    credentials_exception = HTTPException(
-        status_code=401,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[security.ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-        
-    user = db.query(User).filter(User.id == user_id).first()
-    if user is None:
-        raise credentials_exception
-    return user
 
 @router.get("/", response_model=List[VaultItemResponse])
 def read_items(
@@ -49,6 +27,7 @@ def read_items(
 @router.post("/", response_model=VaultItemResponse)
 def create_item(
     item_in: VaultItemCreate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> Any:
@@ -65,12 +44,16 @@ def create_item(
     db.add(item)
     db.commit()
     db.refresh(item)
+    
+    log_event(db, current_user.id, "ITEM_CREATE", severity="INFO", details=f"New {item.type} record added", request=request)
+    
     return item
 
 @router.put("/{item_id}", response_model=VaultItemResponse)
 def update_item(
     item_id: str, 
     item_in: VaultItemUpdate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> Any:
@@ -81,20 +64,30 @@ def update_item(
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
     
+    # Conflict Detection
+    if item_in.version is not None and item_in.version != item.version:
+        raise HTTPException(status_code=409, detail="CONFLICT: Remote record is newer. Sync required.")
+
     if item_in.enc_data:
         item.enc_data = item_in.enc_data
     if item_in.iv:
         item.iv = item_in.iv
     if item_in.auth_tag:
         item.auth_tag = item_in.auth_tag
+    
+    # Increment version on update
+    item.version += 1
         
     db.commit()
     db.refresh(item)
+    
+    log_event(db, current_user.id, "ITEM_UPDATE", severity="INFO", details=f"Record {item.type} updated", request=request)
+    
     return item
-
 @router.delete("/{item_id}")
 def delete_item(
     item_id: str,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> Any:
@@ -104,4 +97,7 @@ def delete_item(
         
     db.delete(item)
     db.commit()
+    
+    log_event(db, current_user.id, "ITEM_DELETE", severity="WARNING", details=f"Record {item.type} purged", request=request)
+    
     return {"status": "success"}

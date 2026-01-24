@@ -58,7 +58,7 @@ export default function ViewItemModal({ item, onClose, onDelete, onEdit }: Props
                 <div className="absolute bottom-0 right-0 w-16 h-1 border-b-2 border-primary shadow-[0_0_10px_rgba(255,176,0,0.5)]" />
                 <div className="absolute bottom-0 right-0 w-1 h-16 border-r-2 border-primary shadow-[0_0_10px_rgba(255,176,0,0.5)]" />
 
-                <button onClick={onClose} className="absolute right-6 top-6 text-primary/40 hover:text-primary transition-colors z-20">
+                <button onClick={onClose} className="absolute right-6 top-6 text-primary/40 hover:text-primary transition-colors z-50">
                     <X className="w-6 h-6" />
                 </button>
 

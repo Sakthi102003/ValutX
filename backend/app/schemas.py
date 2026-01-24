@@ -51,14 +51,27 @@ class VaultItemUpdate(BaseModel):
     enc_data: Optional[str] = None
     iv: Optional[str] = None
     auth_tag: Optional[str] = None
+    version: Optional[int] = None # For conflict detection
 
 class VaultItemResponse(VaultItemBase):
     id: UUID
     user_id: UUID
     enc_data: str
     iv: str
+    version: int
     created_at: datetime
     last_modified: datetime
+
+    class Config:
+        from_attributes = True
+
+class AuditLogResponse(BaseModel):
+    id: str
+    event_type: str
+    severity: str
+    details: Optional[str]
+    ip_address: Optional[str]
+    timestamp: datetime
 
     class Config:
         from_attributes = True

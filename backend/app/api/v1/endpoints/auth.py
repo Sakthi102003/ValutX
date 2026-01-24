@@ -9,27 +9,10 @@ from pydantic import BaseModel
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from app.core.config import settings
+from app.api.deps import get_current_user
+from app.utils.security_logging import log_event
+from fastapi import Request
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
-
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
-    credentials_exception = HTTPException(
-        status_code=401,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-        
-    user = db.query(User).filter(User.id == user_id).first()
-    if user is None:
-        raise credentials_exception
-    return user
 
 router = APIRouter()
 
@@ -62,10 +45,12 @@ def create_user(user_in: UserCreate, db: Session = Depends(get_db)) -> Any:
     db.commit()
     db.refresh(new_user)
     
+    log_event(db, new_user.id, "SIGNUP", severity="INFO", details=f"New account created for {new_user.email}")
+    
     return new_user
 
 @router.post("/login", response_model=Token)
-def login(user_in: UserLogin, db: Session = Depends(get_db)) -> Any:
+def login(user_in: UserLogin, request: Request, db: Session = Depends(get_db)) -> Any:
     """
     OAuth2 compatible token login.
     """
@@ -79,6 +64,8 @@ def login(user_in: UserLogin, db: Session = Depends(get_db)) -> Any:
          
     access_token = create_access_token(subject=user.id)
     
+    log_event(db, user.id, "LOGIN", severity="INFO", request=request)
+    
     return {
         "access_token": access_token,
         "token_type": "bearer",
@@ -88,6 +75,7 @@ def login(user_in: UserLogin, db: Session = Depends(get_db)) -> Any:
 @router.put("/rotate-key", response_model=UserResponse)
 def rotate_key(
     data: UserRotateKey, 
+    request: Request,
     db: Session = Depends(get_db), 
     current_user: User = Depends(get_current_user)
 ) -> Any:
@@ -106,6 +94,9 @@ def rotate_key(
     
     db.commit()
     db.refresh(current_user)
+    
+    log_event(db, current_user.id, "KEY_ROTATION", severity="WARNING", details="Master password and keys rotated", request=request)
+    
     return current_user
 
 class UserSaltResponse(BaseModel):

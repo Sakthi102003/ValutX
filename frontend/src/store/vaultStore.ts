@@ -28,6 +28,7 @@ export interface DecryptedVaultItem {
     fav: boolean;
     rawEnc: string; // The base64 ciphertext
     rawIv: string;  // The base64 IV
+    version: number;
 }
 
 interface VaultState {
@@ -224,7 +225,8 @@ export const useVaultStore = create<VaultState>((set, get) => ({
                         createdAt: item.created_at,
                         fav: false,
                         rawEnc: item.enc_data,
-                        rawIv: item.iv
+                        rawIv: item.iv,
+                        version: item.version
                     });
                 } catch (err) {
                     console.error(`Failed to decrypt item ${item.id}`, err);
@@ -259,7 +261,8 @@ export const useVaultStore = create<VaultState>((set, get) => ({
             createdAt: newItem.created_at,
             fav: false,
             rawEnc: cipherText,
-            rawIv: iv
+            rawIv: iv,
+            version: newItem.version
         };
 
         set({ decryptedItems: [...decryptedItems, newDecrypted] });
@@ -271,16 +274,24 @@ export const useVaultStore = create<VaultState>((set, get) => ({
 
         const { cipherText, iv } = await encryptVaultItem(data, dek);
 
-        await axios.put(`${API_URL}/vault/${id}`, {
+        // Update local state (Optimistic or wait for response)
+        const updatedItem = (await axios.put(`${API_URL}/vault/${id}`, {
             enc_data: cipherText,
             iv: iv,
-            auth_tag: ""
-        });
+            auth_tag: "",
+            version: decryptedItems.find(i => i.id === id)?.version
+        })).data;
 
-        // Update local state
         const updatedList = decryptedItems.map(item => {
             if (item.id === id) {
-                return { ...item, data, type, rawEnc: cipherText, rawIv: iv };
+                return {
+                    ...item,
+                    data,
+                    type,
+                    rawEnc: cipherText,
+                    rawIv: iv,
+                    version: updatedItem.version
+                };
             }
             return item;
         });

@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
 import { ShieldCheck, AlertTriangle } from 'lucide-react';
+import SecurityDiagnostics from '../components/SecurityDiagnostics';
 
 export default function SettingsPage() {
     const {
@@ -222,6 +223,11 @@ export default function SettingsPage() {
                             </div>
                         </div>
                     </div>
+                </div>
+
+                {/* Infrastructure Health - Diagnostics */}
+                <div className="lg:col-span-2">
+                    <SecurityDiagnostics />
                 </div>
             </div>
         </div>
