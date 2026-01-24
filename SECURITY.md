@@ -17,11 +17,11 @@ ValutX is a zero-knowledge, client-side encrypted vault. This document outlines 
 
 ## Data Storage
 
-### Local Storage (Persistent)
--   `valutx_salt`: The random salt required to derive your key (Publicly visible, but useless without password).
--   `valutx_items`: Array of **Encrypted** blobs.
-    -   Contains: `ciphertext`, `iv`, `id`, `type`.
-    -   Does NOT contain: Plaintext data.
+### Backend Storage (Persistent)
+-   `users` table: Stores `kdf_salt`, `encrypted_dek` (wrapped), and hashed `authKey`.
+-   `vault_items` table: Array of **Encrypted** blobs belonging to users.
+    -   Contains: `enc_data`, `iv`, `type`, `created_at`.
+    -   Does NOT contain: Plaintext data or encryption keys.
 
 ### Memory (Ephemeral - RAM)
 -   `masterKey`: The CryptoKey object derived from your password.

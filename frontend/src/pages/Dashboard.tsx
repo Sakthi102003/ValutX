@@ -10,9 +10,10 @@ import NewItemModal from '../components/NewItemModal';
 import ViewItemModal from '../components/ViewItemModal';
 import PasswordGenerator from '../components/PasswordGenerator';
 import SettingsPage from './SettingsPage';
+import PanicOverlay from '../components/PanicOverlay';
 
 export default function Dashboard() {
-    const { logout, panicLock, decryptedItems, addItem, updateItem, deleteItem, fetchItems, userEmail, clipboardStatus, settings } = useVaultStore();
+    const { logout, panicLock, decryptedItems, addItem, updateItem, deleteItem, fetchItems, userEmail, clipboardStatus, settings, isPanicking } = useVaultStore();
     const [activeTab, setActiveTab] = useState<VaultItemType | 'all'>('all');
     const [view, setView] = useState<'items' | 'settings' | 'generator'>('items');
     const [search, setSearch] = useState('');
@@ -146,7 +147,7 @@ export default function Dashboard() {
                         onClick={panicLock}
                         title="IMMEDIATE COUNTERMEASURE: Wipes all decrypted data from memory and terminates session instantly."
                     >
-                        <ShieldAlert className="w-4 h-4 mr-3 group-hover:text-red-500 animate-pulse" /> Panic Protocol
+                        <ShieldAlert className="w-4 h-4 mr-3 group-hover:text-red-500 animate-pulse" /> Immediate Countermeasure
                     </Button>
                     <Button variant="ghost" className="w-full justify-start hover:bg-white/5 rounded-sm text-xs uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity" onClick={logout}>
                         <LogOut className="w-4 h-4 mr-3" /> Terminate Session
@@ -312,6 +313,7 @@ export default function Dashboard() {
                     </div>
                 </div>
             )}
+            <PanicOverlay isTriggered={isPanicking} />
         </div>
     );
 }

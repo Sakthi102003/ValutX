@@ -39,6 +39,7 @@ interface VaultState {
     dek: CryptoKey | null; // Data Encryption Key (Held in RAM only)
     decryptedItems: DecryptedVaultItem[];
     isLoading: boolean;
+    isPanicking: boolean;
     error: string | null;
 
     // Feature 2: UX & Security
@@ -70,6 +71,7 @@ interface VaultState {
     setAutoLockMinutes: (mins: number) => void;
     setClipboardStatus: (text: string | null, duration?: number) => void;
     exportVault: () => void;
+    exportEncryptedVault: () => void;
     importVault: (data: string) => Promise<boolean>;
 }
 
@@ -82,6 +84,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     dek: null,
     decryptedItems: [],
     isLoading: false,
+    isPanicking: false,
     error: null,
 
     lastActivity: Date.now(),
@@ -376,13 +379,18 @@ export const useVaultStore = create<VaultState>((set, get) => ({
 
     panicLock: () => {
         set({
+            isPanicking: true,
             isAuthenticated: false,
             isLocked: true,
             dek: null,
             decryptedItems: [],
             userEmail: null
         });
-        window.location.reload();
+
+        // Final Wipe after animation
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000);
     },
 
     updateActivity: () => {
@@ -434,7 +442,25 @@ export const useVaultStore = create<VaultState>((set, get) => ({
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(decryptedItems, null, 2));
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", `valutx_export_${new Date().toISOString().split('T')[0]}.json`);
+        downloadAnchorNode.setAttribute("download", `valutx_decrypted_export_${new Date().toISOString().split('T')[0]}.json`);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    },
+
+    exportEncryptedVault: () => {
+        const { decryptedItems } = get();
+        const encryptedData = decryptedItems.map(item => ({
+            type: item.type,
+            enc_data: item.rawEnc,
+            iv: item.rawIv,
+            created_at: item.createdAt
+        }));
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(encryptedData, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", `valutx_encrypted_backup_${new Date().toISOString().split('T')[0]}.json`);
         document.body.appendChild(downloadAnchorNode);
         downloadAnchorNode.click();
         downloadAnchorNode.remove();

@@ -13,6 +13,7 @@ export default function SettingsPage() {
         error,
         setError,
         exportVault,
+        exportEncryptedVault,
         importVault,
         settings,
         setAutoLockMinutes
@@ -136,13 +137,18 @@ export default function SettingsPage() {
                     <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-8 text-primary/70">Vault Management</h3>
                     <div className="space-y-4">
                         <div className="p-4 border border-white/5 bg-white/5 rounded-sm">
-                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-white mb-2">Export Encrypted Backup</h4>
+                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-white mb-2">Vault Data Stream</h4>
                             <p className="text-[9px] text-muted-foreground uppercase leading-relaxed mb-4">
-                                Download a local decrypted JSON copy of your vault. WARNING: Keep this file secure.
+                                Download options for local storage and restoration.
                             </p>
-                            <Button onClick={exportVault} variant="outline" size="sm" className="w-full text-[9px] uppercase tracking-widest font-bold border-white/10 hover:border-primary/50 transition-all">
-                                Generate Data Export
-                            </Button>
+                            <div className="space-y-2">
+                                <Button onClick={exportEncryptedVault} variant="outline" size="sm" className="w-full text-[9px] uppercase tracking-widest font-bold border-primary/20 text-primary hover:bg-primary/10 transition-all">
+                                    Generate Encrypted Backup
+                                </Button>
+                                <Button onClick={exportVault} variant="ghost" size="sm" className="w-full text-[9px] uppercase tracking-widest font-bold opacity-40 hover:opacity-100 transition-all">
+                                    Generate Decrypted Export (Unsafe)
+                                </Button>
+                            </div>
                         </div>
 
                         <div className="p-4 border border-white/5 bg-white/5 rounded-sm">

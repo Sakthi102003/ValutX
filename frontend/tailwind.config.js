@@ -45,6 +45,9 @@ export default {
         'flicker': 'flicker 0.15s infinite',
         'scanline': 'scanline 8s linear infinite',
         'glitch': 'glitch 0.3s cubic-bezier(.25,.46,.45,.94) both infinite',
+        'scan': 'scan 2s linear infinite',
+        'loading-bar': 'loading-bar 2s ease-in-out forwards',
+        'shake-1': 'shake 0.2s cubic-bezier(.36,.07,.19,.97) both',
       },
       keyframes: {
         flicker: {
@@ -54,6 +57,20 @@ export default {
         scanline: {
           '0%': { transform: 'translateY(-100%)' },
           '100%': { transform: 'translateY(100%)' },
+        },
+        scan: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+        'loading-bar': {
+          '0%': { width: '0%' },
+          '100%': { width: '100%' },
+        },
+        shake: {
+          '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
+          '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
+          '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
+          '40%, 60%': { transform: 'translate3d(4px, 0, 0)' },
         },
         glitch: {
           '0%': { transform: 'translate(0)' },

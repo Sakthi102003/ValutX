@@ -105,9 +105,9 @@ backend/
 | :--- | :--- | :--- |
 | `id` | UUID (PK) | Unique User ID |
 | `email` | VARCHAR | User Email (Unique) |
-| `auth_hash` | VARCHAR | Bcrypt/Argon2 hash of the *Auth Key* (NOT the password) |
+| `auth_hash` | VARCHAR | Argon2/Bcrypt hash of the *Auth Key* (NOT the password) |
 | `kdf_salt` | VARCHAR | Salt used for client-side KDF |
-| `encrypted_dek` | TEXT | The Data Encryption Key, encrypted by the KEK |
+| `encrypted_dek` | TEXT | The Data Encryption Key, encrypted by the KEK (Wrapped) |
 | `created_at` | TIMESTAMP | |
 
 ### Table: `vault_items`

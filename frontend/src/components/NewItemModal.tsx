@@ -4,6 +4,7 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Label } from './ui/Label';
 import { X } from 'lucide-react';
+import { cn } from '../lib/utils';
 
 interface Props {
     isOpen: boolean;
@@ -58,36 +59,54 @@ export default function NewItemModal({ isOpen, onClose, onSave, initialData }: P
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-card w-full max-w-lg border rounded-xl shadow-2xl p-6 relative animate-in fade-in zoom-in-95 duration-200">
-                <button onClick={onClose} className="absolute right-4 top-4 text-muted-foreground hover:text-foreground">
-                    <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
+            {/* Scanline Overlay */}
+            <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.02),rgba(0,255,0,0.01),rgba(0,0,255,0.02))] bg-[length:100%_4px,100%_100%] opacity-20" />
+
+            <div className="bg-black/90 w-full max-w-lg border border-primary/20 rounded-sm shadow-[0_0_50px_rgba(0,0,0,0.8)] p-8 relative animate-in zoom-in-95 duration-200 overflow-hidden group">
+                {/* Edge Accents */}
+                <div className="absolute top-0 left-0 w-16 h-1 border-t-2 border-primary shadow-[0_0_10px_rgba(255,176,0,0.5)]" />
+                <div className="absolute top-0 left-0 w-1 h-16 border-l-2 border-primary shadow-[0_0_10px_rgba(255,176,0,0.5)]" />
+                <div className="absolute bottom-0 right-0 w-16 h-1 border-b-2 border-primary shadow-[0_0_10px_rgba(255,176,0,0.5)]" />
+                <div className="absolute bottom-0 right-0 w-1 h-16 border-r-2 border-primary shadow-[0_0_10px_rgba(255,176,0,0.5)]" />
+
+                <button onClick={onClose} className="absolute right-6 top-6 text-primary/40 hover:text-primary transition-colors z-20">
+                    <X className="w-6 h-6" />
                 </button>
 
-                <h2 className="text-xl font-bold mb-6">{initialData ? 'Edit Item' : 'Add New Item'}</h2>
+                <div className="mb-8 relative z-20">
+                    <h2 className="text-sm font-black uppercase tracking-[0.4em] text-primary/70 mb-1">Sector Initialization</h2>
+                    <h1 className="text-3xl font-black uppercase tracking-tighter text-white">
+                        {initialData ? 'Update Record' : 'Forge New Entry'}
+                    </h1>
+                </div>
 
-                <div className="flex space-x-2 mb-6 p-1 bg-secondary/50 rounded-lg w-fit">
+                <div className="flex space-x-2 mb-8 p-1 bg-white/5 border border-white/10 rounded-sm w-fit relative z-20">
                     {(['login', 'card', 'id', 'note'] as VaultItemType[]).map(t => (
-                        <Button
+                        <button
                             key={t}
                             type="button"
-                            variant={type === t ? 'default' : 'ghost'}
-                            size="sm"
                             onClick={() => setType(t)}
-                            className="capitalize"
+                            className={cn(
+                                "px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-sm",
+                                type === t
+                                    ? "bg-primary text-black shadow-[0_0_15px_rgba(255,176,0,0.3)]"
+                                    : "text-primary/40 hover:text-primary/70 hover:bg-white/5"
+                            )}
                         >
                             {t}
-                        </Button>
+                        </button>
                     ))}
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-6 relative z-20">
                     <div className="space-y-2">
-                        <Label>Name</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-primary/60 ml-1">Archive Identifier</Label>
                         <Input
                             value={formData.name || ''}
                             onChange={e => setFormData({ ...formData, name: e.target.value })}
-                            placeholder="e.g. Google, Chase Bank"
+                            placeholder="NAME_RECORD..."
+                            className="bg-white/5 border-white/10 focus:border-primary/50 h-11 rounded-sm font-mono text-xs uppercase tracking-widest"
                             autoFocus
                             required
                         />
@@ -96,50 +115,53 @@ export default function NewItemModal({ isOpen, onClose, onSave, initialData }: P
                     {type === 'login' && (
                         <>
                             <div className="space-y-2">
-                                <Label>Username/Email</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-primary/60 ml-1">Identity Access</Label>
                                 <Input
                                     value={formData.username || ''}
                                     onChange={e => setFormData({ ...formData, username: e.target.value })}
+                                    placeholder="USERNAME / EMAIL..."
+                                    className="bg-white/5 border-white/10 focus:border-primary/50 h-11 rounded-sm font-mono text-xs tracking-widest"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Password</Label>
-                                <div className="flex space-x-2">
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-primary/60 ml-1">Security Key</Label>
+                                <div className="space-y-4">
                                     <Input
                                         type="text"
                                         value={formData.password || ''}
                                         onChange={e => setFormData({ ...formData, password: e.target.value })}
-                                        className="font-mono"
-                                        placeholder="MANUAL INPUT..."
+                                        className="bg-white/5 border-white/10 focus:border-primary/50 h-11 rounded-sm font-mono text-xs tracking-widest text-primary"
+                                        placeholder="ESTABLISH_PASSPHRASE..."
                                     />
+                                    {formData.password && (() => {
+                                        const entropy = calculateDynamicEntropy(formData.password);
+                                        return (
+                                            <div className="p-3 bg-primary/5 border border-primary/10 rounded-sm animate-in fade-in slide-in-from-top-1">
+                                                <div className="flex justify-between items-center px-1 mb-2">
+                                                    <span className="text-[8px] font-black uppercase tracking-widest text-primary/60">Entropy Analysis</span>
+                                                    <span className="text-[10px] font-mono text-primary font-bold">{entropy.bits} BITS</span>
+                                                </div>
+                                                <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                                    <div
+                                                        className={cn("h-full transition-all duration-500 ease-out", entropy.color)}
+                                                        style={{ width: `${Math.min((entropy.bits / 128) * 100, 100)}%` }}
+                                                    />
+                                                </div>
+                                                <p className="text-[9px] text-right font-black uppercase tracking-tighter mt-2 text-primary/80">
+                                                    STATUS: <span className="text-white">{entropy.label}</span>
+                                                </p>
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
-                                {formData.password && (() => {
-                                    const entropy = calculateDynamicEntropy(formData.password);
-                                    return (
-                                        <div className="mt-3 space-y-2 p-2 bg-white/5 border border-white/5 rounded-sm animate-in fade-in slide-in-from-top-1 duration-300">
-                                            <div className="flex justify-between items-center px-1">
-                                                <span className="text-[8px] font-black uppercase tracking-widest text-primary/60">Entropy Analysis</span>
-                                                <span className="text-[10px] font-mono text-white">{entropy.bits} BITS</span>
-                                            </div>
-                                            <div className="h-1 w-full bg-secondary/50 rounded-full overflow-hidden">
-                                                <div
-                                                    className={`h-full transition-all duration-500 ease-out ${entropy.color}`}
-                                                    style={{ width: `${Math.min((entropy.bits / 128) * 100, 100)}%` }}
-                                                />
-                                            </div>
-                                            <p className="text-[9px] text-right font-black uppercase tracking-tighter" style={{ color: `var(--${entropy.color.split('-')[1]})` }}>
-                                                {entropy.label}
-                                            </p>
-                                        </div>
-                                    );
-                                })()}
                             </div>
                             <div className="space-y-2">
-                                <Label>Website</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-primary/60 ml-1">Domain Link</Label>
                                 <Input
                                     value={formData.website || ''}
                                     onChange={e => setFormData({ ...formData, website: e.target.value })}
-                                    placeholder="https://"
+                                    placeholder="HTTPS://TARGET_ORIGIN..."
+                                    className="bg-white/5 border-white/10 focus:border-primary/50 h-11 rounded-sm font-mono text-xs tracking-widest"
                                 />
                             </div>
                         </>
@@ -148,29 +170,32 @@ export default function NewItemModal({ isOpen, onClose, onSave, initialData }: P
                     {type === 'card' && (
                         <>
                             <div className="space-y-2">
-                                <Label>Card Number</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-primary/60 ml-1">Credit Sequence</Label>
                                 <Input
                                     value={formData.number || ''}
                                     onChange={e => setFormData({ ...formData, number: e.target.value })}
-                                    placeholder="0000 0000 0000 0000"
+                                    placeholder="#### #### #### ####"
+                                    className="bg-white/5 border-white/10 focus:border-primary/50 h-11 rounded-sm font-mono text-xs tracking-widest"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label>Expiry</Label>
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary/60 ml-1">Expiration</Label>
                                     <Input
                                         value={formData.expiry || ''}
                                         onChange={e => setFormData({ ...formData, expiry: e.target.value })}
                                         placeholder="MM/YY"
+                                        className="bg-white/5 border-white/10 focus:border-primary/50 h-11 rounded-sm font-mono text-xs tracking-widest"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>CVV</Label>
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary/60 ml-1">Validation Code</Label>
                                     <Input
                                         type="password"
                                         value={formData.cvv || ''}
                                         onChange={e => setFormData({ ...formData, cvv: e.target.value })}
-                                        placeholder="123"
+                                        placeholder="###"
+                                        className="bg-white/5 border-white/10 focus:border-primary/50 h-11 rounded-sm font-mono text-xs tracking-widest"
                                     />
                                 </div>
                             </div>
@@ -180,28 +205,31 @@ export default function NewItemModal({ isOpen, onClose, onSave, initialData }: P
                     {type === 'id' && (
                         <>
                             <div className="space-y-2">
-                                <Label>ID Number</Label>
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-primary/60 ml-1">Identification Serial</Label>
                                 <Input
                                     value={formData.number || ''}
                                     onChange={e => setFormData({ ...formData, number: e.target.value })}
-                                    placeholder="Passport, SSN, License..."
+                                    placeholder="PASSPORT / LICENSE / SSN..."
+                                    className="bg-white/5 border-white/10 focus:border-primary/50 h-11 rounded-sm font-mono text-xs tracking-widest"
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label>Issue Date</Label>
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary/60 ml-1">Issue Temporal</Label>
                                     <Input
                                         value={formData.issueDate || ''}
                                         onChange={e => setFormData({ ...formData, issueDate: e.target.value })}
                                         placeholder="YYYY-MM-DD"
+                                        className="bg-white/5 border-white/10 focus:border-primary/50 h-11 rounded-sm font-mono text-xs tracking-widest"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Expiry Date</Label>
+                                    <Label className="text-[10px] font-black uppercase tracking-widest text-primary/60 ml-1">Sunset Temporal</Label>
                                     <Input
                                         value={formData.expiryDate || ''}
                                         onChange={e => setFormData({ ...formData, expiryDate: e.target.value })}
                                         placeholder="YYYY-MM-DD"
+                                        className="bg-white/5 border-white/10 focus:border-primary/50 h-11 rounded-sm font-mono text-xs tracking-widest"
                                     />
                                 </div>
                             </div>
@@ -210,19 +238,31 @@ export default function NewItemModal({ isOpen, onClose, onSave, initialData }: P
 
                     {type === 'note' && (
                         <div className="space-y-2">
-                            <Label>Secure Note</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-primary/60 ml-1">Secure Data Stream</Label>
                             <textarea
-                                className="flex min-h-[150px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                className="flex min-h-[150px] w-full bg-white/5 border border-white/10 focus:border-primary/50 rounded-sm px-4 py-3 text-xs font-mono tracking-widest text-white placeholder:text-white/20 outline-none transition-all resize-none"
                                 value={formData.note || ''}
                                 onChange={e => setFormData({ ...formData, note: e.target.value })}
-                                placeholder="Your secret thoughts..."
+                                placeholder="INITIALIZE DATA UPLOAD..."
                             />
                         </div>
                     )}
 
-                    <div className="flex justify-end pt-4 gap-2">
-                        <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-                        <Button type="submit">Encrypt & Save</Button>
+                    <div className="flex justify-end pt-6 gap-3">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={onClose}
+                            className="text-[10px] font-black uppercase tracking-widest border border-white/5 hover:bg-white/5 h-11 px-6 rounded-sm opacity-60 hover:opacity-100"
+                        >
+                            Abort
+                        </Button>
+                        <Button
+                            type="submit"
+                            className="text-[10px] font-black uppercase tracking-widest bg-primary text-black h-11 px-8 rounded-sm shadow-[0_0_20px_rgba(255,176,0,0.2)] hover:scale-[1.02] active:scale-95 transition-all"
+                        >
+                            Encrypt Sector
+                        </Button>
                     </div>
                 </form>
             </div>
