@@ -3,7 +3,7 @@ import { useVaultStore } from '../store/vaultStore';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { Lock, Loader2, ArrowRight } from 'lucide-react';
+import { Loader2, ArrowRight } from 'lucide-react';
 
 export default function UnlockPage() {
     const unlockVault = useVaultStore((state) => state.unlockVault);
@@ -50,8 +50,8 @@ export default function UnlockPage() {
                 <div className="absolute -bottom-[1px] -right-[1px] w-6 h-6 border-b-2 border-r-2 border-primary/40" />
 
                 <CardHeader className="text-center pb-6 pt-10">
-                    <div className="mx-auto bg-primary/10 p-5 rounded-sm w-fit mb-6 ring-1 ring-primary/30 shadow-[0_0_20px_rgba(255,176,0,0.15)] relative group cursor-default">
-                        <Lock className="w-10 h-10 text-primary animate-pulse" />
+                    <div className="mx-auto bg-primary/10 p-4 rounded-sm w-fit mb-6 ring-1 ring-primary/30 shadow-[0_0_20px_rgba(255,176,0,0.15)] relative group cursor-default">
+                        <img src="/favicon.png" alt="ValutX" className="w-12 h-12 object-contain" />
                         <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                     <CardTitle className="text-3xl font-black tracking-[0.2em] uppercase text-primary text-glow-amber">Vault Locked</CardTitle>

@@ -4,14 +4,19 @@ import { useVaultStore } from './store/vaultStore';
 import AuthPage from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
+import UnlockPage from './pages/UnlockPage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useVaultStore();
+  const { isAuthenticated, isLocked } = useVaultStore();
   const location = useLocation();
 
   if (!isAuthenticated) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  if (isLocked) {
+    return <UnlockPage />;
   }
 
   return <>{children}</>;

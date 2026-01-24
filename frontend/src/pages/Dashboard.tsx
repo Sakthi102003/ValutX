@@ -4,7 +4,7 @@ import { useVaultStore } from '../store/vaultStore';
 import type { VaultItemType, DecryptedVaultItem } from '../store/vaultStore';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Lock, LogOut, Plus, Search, CreditCard, Key, FileText, User, ShieldAlert, Shield, Settings, Zap, Activity } from 'lucide-react';
+import { LogOut, Plus, Search, CreditCard, Key, FileText, User, ShieldAlert, Shield, Settings, Zap, Activity } from 'lucide-react';
 import { cn } from '../lib/utils';
 import NewItemModal from '../components/NewItemModal';
 import ViewItemModal from '../components/ViewItemModal';
@@ -109,8 +109,8 @@ export default function Dashboard() {
                 <div className="absolute top-0 right-0 w-[1px] h-full bg-gradient-to-b from-transparent via-primary/50 to-transparent opacity-30" />
 
                 <Link to="/" className="flex items-center space-x-3 px-2 py-2 mb-4 group cursor-pointer">
-                    <div className="bg-primary/20 p-2 rounded-sm ring-1 ring-primary/40 group-hover:bg-primary/30 transition-all shadow-[0_0_15px_rgba(255,176,0,0.2)]">
-                        <Lock className="w-5 h-5 text-primary" />
+                    <div className="bg-primary/20 p-1 rounded-sm ring-1 ring-primary/40 group-hover:bg-primary/30 transition-all shadow-[0_0_15px_rgba(255,176,0,0.2)]">
+                        <img src="/favicon.png" alt="ValutX" className="w-6 h-6 object-contain" />
                     </div>
                     <span className="font-bold text-xl tracking-[0.2em] uppercase text-primary text-glow-amber">ValutX</span>
                 </Link>

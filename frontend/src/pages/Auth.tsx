@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useVaultStore } from '../store/vaultStore';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Shield, Lock, ArrowRight, Loader2, AlertCircle, ChevronLeft } from 'lucide-react';
+import { Shield, ArrowRight, Loader2, AlertCircle, ChevronLeft } from 'lucide-react';
 
 export default function AuthPage() {
     const { login, signup, isLoading, error, setError } = useVaultStore();
@@ -151,7 +151,7 @@ export default function AuthPage() {
             <div className="absolute bottom-8 w-full text-center">
                 <div className="inline-flex items-center gap-6 px-6 py-2 bg-black/40 border border-white/5 rounded-full backdrop-blur-md opacity-40 hover:opacity-100 transition-opacity cursor-default lg:scale-100 scale-75">
                     <span className="flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest">
-                        <Lock className="w-3 h-3 text-primary" /> Zero-Knowledge Verified
+                        <img src="/favicon.png" alt="Lock" className="w-3 h-3 object-contain" /> Zero-Knowledge Verified
                     </span>
                     <div className="w-[1px] h-3 bg-white/20" />
                     <span className="flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest">

@@ -1,6 +1,6 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
-import { Shield, Lock, Zap, Cpu, Globe, Server, ArrowRight, Activity, Terminal } from 'lucide-react';
+import { Shield, Zap, Cpu, Globe, Server, ArrowRight, Activity, Terminal } from 'lucide-react';
 
 export default function Home() {
     const navigate = useNavigate();
@@ -21,15 +21,14 @@ export default function Home() {
             <header className="fixed top-0 w-full z-40 border-b border-white/5 bg-black/60 backdrop-blur-xl">
                 <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
                     <Link to="/" className="flex items-center space-x-3 group cursor-pointer">
-                        <div className="bg-primary/20 p-2 rounded-sm ring-1 ring-primary/40 group-hover:bg-primary/30 transition-all shadow-[0_0_15px_rgba(255,176,0,0.2)]">
-                            <Lock className="w-5 h-5 text-primary" />
+                        <div className="bg-primary/20 p-1 rounded-sm ring-1 ring-primary/40 group-hover:bg-primary/30 transition-all shadow-[0_0_15px_rgba(255,176,0,0.2)]">
+                            <img src="/favicon.png" alt="ValutX" className="w-6 h-6 object-contain" />
                         </div>
                         <span className="font-bold text-2xl tracking-[0.2em] uppercase text-primary text-glow-amber">ValutX</span>
                     </Link>
                     <nav className="hidden md:flex items-center space-x-10">
                         <a href="#features" className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground hover:text-primary transition-colors">Infrastructure</a>
                         <a href="#tech" className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground hover:text-primary transition-colors">Encryption</a>
-                        <a href="#security" className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground hover:text-primary transition-colors">Protocol</a>
                         <Button
                             variant="ghost"
                             className="text-[10px] font-bold uppercase tracking-[0.3em] border border-primary/20 hover:border-primary/50 text-white rounded-sm px-6"

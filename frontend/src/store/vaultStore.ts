@@ -58,6 +58,8 @@ interface VaultState {
     login: (email: string, password: string) => Promise<boolean>;
     changeMasterPassword: (oldPw: string, newPw: string) => Promise<boolean>;
     verifyMasterPassword: (password: string) => Promise<boolean>;
+    unlockVault: (password: string) => Promise<boolean>;
+    lock: () => void;
     logout: () => void;
     panicLock: () => void;
 
@@ -371,6 +373,29 @@ export const useVaultStore = create<VaultState>((set, get) => ({
         }
     },
 
+    unlockVault: async (password) => {
+        const { kdfSalt, encryptedDek } = get();
+        if (!kdfSalt || !encryptedDek) return false;
+
+        set({ isLoading: true, error: null });
+        try {
+            const kek = await deriveKEK(password, kdfSalt);
+            const dek = await unwrapDEK(encryptedDek.cipherText, encryptedDek.iv, kek);
+            set({ dek, isLocked: false });
+            await get().fetchItems();
+            return true;
+        } catch (e) {
+            set({ error: "Invalid master password" });
+            return false;
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    lock: () => {
+        set({ isLocked: true, dek: null, decryptedItems: [] });
+    },
+
     deleteItem: async (id) => {
         const { decryptedItems } = get();
         await axios.delete(`${API_URL}/vault/${id}`);
@@ -416,7 +441,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
 
         // Set new timer
         const newTimer = window.setTimeout(() => {
-            get().logout();
+            get().lock();
         }, settings.autoLockMinutes * 60000);
 
         set({ autoLockTimer: newTimer });
