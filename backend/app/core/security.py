@@ -26,11 +26,23 @@ def _get_prehashed_password(password: str) -> bytes:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
-    Verifies a password against its hash using manual bcrypt to avoid passlib bugs.
+    Verifies a password against its hash.
+    Tries the NEW format (SHA256 pre-hash) first.
+    If that fails, tries the OLD format (Direct) for backwards compatibility.
     """
     try:
+        # 1. Try NEW format (Safe for any length)
         password_bytes = _get_prehashed_password(plain_password)
-        return bcrypt.checkpw(password_bytes, hashed_password.encode("utf-8"))
+        if bcrypt.checkpw(password_bytes, hashed_password.encode("utf-8")):
+            return True
+        
+        # 2. Try OLD format (Backwards compatibility)
+        # Note: bcrypt.checkpw only accepts passwords <= 72 bytes.
+        original_password_bytes = plain_password.encode("utf-8")
+        if len(original_password_bytes) <= 72:
+            return bcrypt.checkpw(original_password_bytes, hashed_password.encode("utf-8"))
+            
+        return False
     except Exception:
         return False
 
