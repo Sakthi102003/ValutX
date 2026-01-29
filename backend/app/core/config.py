@@ -10,17 +10,18 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./valutx.db"
 
     # CORS
-    CORS_ORIGINS: list[str] | str = ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"]
-
-    @property
-    def get_cors_origins(self) -> list[str]:
-        if isinstance(self.CORS_ORIGINS, str):
-            # Split by comma and strip whitespace AND trailing slashes
-            return [i.strip().rstrip("/") for i in self.CORS_ORIGINS.split(",") if i.strip()]
-        # Also clean up the default list just in case
-        return [i.rstrip("/") for i in self.CORS_ORIGINS]
+    # We include your production URL here as a default fallback
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:5173", 
+        "http://localhost:3000", 
+        "http://127.0.0.1:5173",
+        "https://valut-x.vercel.app"
+    ]
 
     class Config:
         case_sensitive = True
+        # This allows you to pass a comma-separated string in Render
+        # and Pydantic will try to parse it, but we'll handle it in main.py too.
+        env_prefix = ""
 
 settings = Settings()

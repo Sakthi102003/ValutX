@@ -14,10 +14,23 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS
+# Robust CORS Origins Processing
+raw_origins = settings.CORS_ORIGINS
+final_origins = []
+
+if isinstance(raw_origins, str):
+    # Handle comma separated string from environment variable
+    final_origins = [o.strip().rstrip("/") for o in raw_origins.split(",") if o.strip()]
+elif isinstance(raw_origins, list):
+    final_origins = [str(o).strip().rstrip("/") for o in raw_origins]
+
+# Ensure the hardcoded production URL is ALWAYS there just in case
+if "https://valut-x.vercel.app" not in final_origins:
+    final_origins.append("https://valut-x.vercel.app")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.get_cors_origins,
+    allow_origins=final_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
