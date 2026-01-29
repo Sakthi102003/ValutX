@@ -10,7 +10,13 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./valutx.db"
 
     # CORS
-    CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"]
+    CORS_ORIGINS: list[str] | str = ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"]
+
+    @property
+    def get_cors_origins(self) -> list[str]:
+        if isinstance(self.CORS_ORIGINS, str):
+            return [i.strip() for i in self.CORS_ORIGINS.split(",") if i.strip()]
+        return self.CORS_ORIGINS
 
     class Config:
         case_sensitive = True
