@@ -10,13 +10,8 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./valutx.db"
 
     # CORS
-    # We include your production URL here as a default fallback
-    CORS_ORIGINS: list[str] = [
-        "http://localhost:5173", 
-        "http://localhost:3000", 
-        "http://127.0.0.1:5173",
-        "https://valut-x.vercel.app"
-    ]
+    # We use str here so Pydantic doesn't try to parse it as JSON
+    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,https://valut-x.vercel.app"
 
     class Config:
         case_sensitive = True
