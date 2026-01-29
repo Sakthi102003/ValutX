@@ -15,8 +15,10 @@ class Settings(BaseSettings):
     @property
     def get_cors_origins(self) -> list[str]:
         if isinstance(self.CORS_ORIGINS, str):
-            return [i.strip() for i in self.CORS_ORIGINS.split(",") if i.strip()]
-        return self.CORS_ORIGINS
+            # Split by comma and strip whitespace AND trailing slashes
+            return [i.strip().rstrip("/") for i in self.CORS_ORIGINS.split(",") if i.strip()]
+        # Also clean up the default list just in case
+        return [i.rstrip("/") for i in self.CORS_ORIGINS]
 
     class Config:
         case_sensitive = True
