@@ -76,7 +76,9 @@ interface VaultState {
     exportVault: () => void;
     exportEncryptedVault: () => void;
     importVault: (data: string) => Promise<boolean>;
+    initializeVault: (password: string) => Promise<boolean>;
 }
+
 
 export const useVaultStore = create<VaultState>((set, get) => ({
     isLocked: true,
@@ -515,5 +517,11 @@ export const useVaultStore = create<VaultState>((set, get) => ({
             console.error(e);
             return false;
         }
+    },
+
+    initializeVault: async (password) => {
+        // Alias for signup with a default admin email for the setup page
+        return get().signup('admin@valutx.local', password);
     }
 }));
+

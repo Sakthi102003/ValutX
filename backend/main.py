@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.endpoints import auth, vault, audit
 from app.db.session import engine, Base
 from app.models import user, item, audit as audit_model
+from app.core.config import settings
 
 # Create Tables
 Base.metadata.create_all(bind=engine)
