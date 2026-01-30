@@ -44,23 +44,23 @@ export default function UnlockPage() {
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] animate-pulse-slow" />
             </div>
 
-            <Card className="w-full max-w-sm border-primary/20 bg-black/60 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-sm relative z-10 overflow-hidden">
+            <Card className="w-[calc(100%-2rem)] max-w-sm border-primary/20 bg-black/60 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-sm relative z-10 overflow-hidden">
                 {/* Corner Accents */}
                 <div className="absolute -top-[1px] -left-[1px] w-6 h-6 border-t-2 border-l-2 border-primary/40" />
                 <div className="absolute -bottom-[1px] -right-[1px] w-6 h-6 border-b-2 border-r-2 border-primary/40" />
 
-                <CardHeader className="text-center pb-6 pt-10">
-                    <div className="mx-auto bg-primary/10 p-4 rounded-sm w-fit mb-6 ring-1 ring-primary/30 shadow-[0_0_20px_rgba(255,176,0,0.15)] relative group cursor-default">
-                        <img src="/favicon.png" alt="ValutX" className="w-12 h-12 object-contain" />
+                <CardHeader className="text-center pb-6 pt-8 md:pt-10 px-4">
+                    <div className="mx-auto bg-primary/10 p-4 rounded-sm w-fit mb-4 md:mb-6 ring-1 ring-primary/30 shadow-[0_0_20px_rgba(255,176,0,0.15)] relative group cursor-default">
+                        <img src="/favicon.png" alt="ValutX" className="w-10 h-10 md:w-12 md:h-12 object-contain" />
                         <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    <CardTitle className="text-3xl font-black tracking-[0.2em] uppercase text-primary text-glow-amber">Vault Locked</CardTitle>
+                    <CardTitle className="text-2xl md:text-3xl font-black tracking-[0.2em] uppercase text-primary text-glow-amber">Vault Locked</CardTitle>
                     <div className="flex items-center justify-center gap-2 mt-4 px-3 py-1 bg-primary/5 border border-primary/10 rounded-sm w-fit mx-auto">
                         <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                        <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Protocol: Secure_Lockdown</span>
+                        <span className="text-[8px] md:text-[9px] text-muted-foreground uppercase tracking-widest font-bold">Protocol: Secure_Lockdown</span>
                     </div>
                 </CardHeader>
-                <CardContent className="pb-10">
+                <CardContent className="pb-8 md:pb-10 px-6">
                     <form onSubmit={handleUnlock} className="space-y-6">
                         <div className="space-y-2">
                             <Input

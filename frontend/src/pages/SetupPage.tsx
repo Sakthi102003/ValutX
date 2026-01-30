@@ -50,27 +50,27 @@ export default function SetupPage() {
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[150px] animate-pulse-slow" />
             </div>
 
-            <Card className="w-full max-w-md border-primary/20 bg-black/60 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-sm relative z-10 overflow-hidden">
+            <Card className="w-[calc(100%-2rem)] max-w-md border-primary/20 bg-black/60 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] rounded-sm relative z-10 overflow-hidden">
                 {/* Corner Accents */}
                 <div className="absolute -top-[1px] -left-[1px] w-6 h-6 border-t-2 border-l-2 border-primary/40" />
                 <div className="absolute -bottom-[1px] -right-[1px] w-6 h-6 border-b-2 border-r-2 border-primary/40" />
 
-                <CardHeader className="text-center pt-10">
-                    <div className="mx-auto bg-primary/10 p-5 rounded-sm w-fit mb-6 ring-1 ring-primary/30 shadow-[0_0_20px_rgba(255,176,0,0.15)] relative group">
-                        <ShieldCheck className="w-12 h-12 text-primary animate-pulse" />
+                <CardHeader className="text-center pt-8 md:pt-10 px-4">
+                    <div className="mx-auto bg-primary/10 p-4 md:p-5 rounded-sm w-fit mb-4 md:mb-6 ring-1 ring-primary/30 shadow-[0_0_20px_rgba(255,176,0,0.15)] relative group">
+                        <ShieldCheck className="w-10 h-10 md:w-12 md:h-12 text-primary animate-pulse" />
                         <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    <CardTitle className="text-3xl font-black tracking-[0.2em] uppercase text-primary text-glow-amber">Vault Init</CardTitle>
-                    <div className="flex flex-col gap-4 mt-4">
-                        <div className="text-[10px] uppercase tracking-widest text-muted-foreground leading-relaxed px-4">
+                    <CardTitle className="text-2xl md:text-3xl font-black tracking-[0.2em] uppercase text-primary text-glow-amber">Vault Init</CardTitle>
+                    <div className="flex flex-col gap-3 md:gap-4 mt-4">
+                        <div className="text-[10px] uppercase tracking-widest text-muted-foreground leading-relaxed px-2 md:px-4">
                             ESTABLISHING AES-256-GCM KEY DERIVATION PARAMETERS.
                         </div>
                         <div className="bg-red-500/10 border-x border-red-500/50 py-2 px-3 mx-2">
-                            <span className="text-red-500 text-[9px] font-black uppercase tracking-[0.15em]">Critical Warning: Non-Recoverable Architecture. Loss of Master Password results in Permanent Data Sector Loss.</span>
+                            <span className="text-red-500 text-[8px] md:text-[9px] font-black uppercase tracking-[0.15em]">Critical Warning: Non-Recoverable Architecture. Loss of Master Password results in Permanent Data Sector Loss.</span>
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent className="pb-10">
+                <CardContent className="pb-8 md:pb-10 pt-2 px-6">
                     <form onSubmit={handleSetup} className="space-y-6">
                         <div className="space-y-2">
                             <Label htmlFor="password" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Establish Master Protocol</Label>

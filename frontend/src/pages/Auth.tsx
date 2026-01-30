@@ -42,8 +42,8 @@ export default function AuthPage() {
             <div className="absolute inset-0 cyber-grid opacity-20 pointer-events-none" />
 
             {/* Back to Home Link */}
-            <div className="absolute top-8 left-8 z-20">
-                <Link to="/" className="flex items-center space-x-2 text-[10px] font-bold uppercase tracking-[0.3em] text-primary/60 hover:text-primary transition-all group">
+            <div className="absolute top-4 left-4 md:top-8 md:left-8 z-20">
+                <Link to="/" className="flex items-center space-x-2 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.3em] text-primary/60 hover:text-primary transition-all group">
                     <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
                     <span>Return to System Core</span>
                 </Link>
@@ -51,13 +51,13 @@ export default function AuthPage() {
 
             {/* Background Glows */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[150px] animate-pulse-slow" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-primary/5 rounded-full blur-[80px] md:blur-[150px] animate-pulse-slow" />
             </div>
 
-            <div className="w-full max-w-md p-10 bg-black/60 backdrop-blur-xl border border-primary/20 rounded-sm shadow-[0_0_50px_rgba(0,0,0,0.8)] relative z-10 animate-in fade-in zoom-in-95 duration-500">
+            <div className="w-[calc(100%-2rem)] max-w-md p-6 md:p-10 bg-black/60 backdrop-blur-xl border border-primary/20 rounded-sm shadow-[0_0_50px_rgba(0,0,0,0.8)] relative z-10 animate-in fade-in zoom-in-95 duration-500">
                 {/* Corner Accents */}
-                <div className="absolute -top-[1px] -left-[1px] w-8 h-8 border-t-2 border-l-2 border-primary/40" />
-                <div className="absolute -bottom-[1px] -right-[1px] w-8 h-8 border-b-2 border-r-2 border-primary/40" />
+                <div className="absolute -top-[1px] -left-[1px] w-6 md:w-8 h-6 md:h-8 border-t-2 border-l-2 border-primary/40" />
+                <div className="absolute -bottom-[1px] -right-[1px] w-6 md:w-8 h-6 md:h-8 border-b-2 border-r-2 border-primary/40" />
 
                 <div className="flex flex-col items-center mb-10">
                     <div className="bg-primary/10 p-4 rounded-sm mb-6 ring-1 ring-primary/30 shadow-[0_0_20px_rgba(255,176,0,0.15)] relative group cursor-default">

@@ -59,36 +59,36 @@ export default function NewItemModal({ isOpen, onClose, onSave, initialData }: P
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300 overflow-y-auto">
             {/* Scanline Overlay */}
             <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.02),rgba(0,255,0,0.01),rgba(0,0,255,0.02))] bg-[length:100%_4px,100%_100%] opacity-20" />
 
-            <div className="bg-black/90 w-full max-w-lg border border-primary/20 rounded-sm shadow-[0_0_50px_rgba(0,0,0,0.8)] p-8 relative animate-in zoom-in-95 duration-200 overflow-hidden group">
+            <div className="bg-black/90 w-full max-w-lg border border-primary/20 rounded-sm shadow-[0_0_50px_rgba(0,0,0,0.8)] p-6 md:p-8 relative animate-in zoom-in-95 duration-200 overflow-hidden group my-auto">
                 {/* Edge Accents */}
-                <div className="absolute top-0 left-0 w-16 h-1 border-t-2 border-primary shadow-[0_0_10px_rgba(255,176,0,0.5)]" />
-                <div className="absolute top-0 left-0 w-1 h-16 border-l-2 border-primary shadow-[0_0_10px_rgba(255,176,0,0.5)]" />
-                <div className="absolute bottom-0 right-0 w-16 h-1 border-b-2 border-primary shadow-[0_0_10px_rgba(255,176,0,0.5)]" />
-                <div className="absolute bottom-0 right-0 w-1 h-16 border-r-2 border-primary shadow-[0_0_10px_rgba(255,176,0,0.5)]" />
+                <div className="absolute top-0 left-0 w-12 md:w-16 h-1 border-t-2 border-primary shadow-[0_0_10px_rgba(255,176,0,0.5)]" />
+                <div className="absolute top-0 left-0 w-1 h-12 md:w-16 border-l-2 border-primary shadow-[0_0_10px_rgba(255,176,0,0.5)]" />
+                <div className="absolute bottom-0 right-0 w-12 md:w-16 h-1 border-b-2 border-primary shadow-[0_0_10px_rgba(255,176,0,0.5)]" />
+                <div className="absolute bottom-0 right-0 w-1 h-12 md:w-16 border-r-2 border-primary shadow-[0_0_10px_rgba(255,176,0,0.5)]" />
 
-                <button onClick={onClose} className="absolute right-6 top-6 text-primary/40 hover:text-primary transition-colors z-50">
+                <button onClick={onClose} className="absolute right-4 top-4 md:right-6 md:top-6 text-primary/40 hover:text-primary transition-colors z-50 p-2">
                     <X className="w-6 h-6" />
                 </button>
 
-                <div className="mb-8 relative z-20">
-                    <h2 className="text-sm font-black uppercase tracking-[0.4em] text-primary/70 mb-1">Sector Initialization</h2>
-                    <h1 className="text-3xl font-black uppercase tracking-tighter text-white">
+                <div className="mb-6 md:mb-8 relative z-20">
+                    <h2 className="text-[10px] md:text-sm font-black uppercase tracking-[0.4em] text-primary/70 mb-1">Sector Initialization</h2>
+                    <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-white">
                         {initialData ? 'Update Record' : 'Forge New Entry'}
                     </h1>
                 </div>
 
-                <div className="flex space-x-2 mb-8 p-1 bg-white/5 border border-white/10 rounded-sm w-fit relative z-20">
+                <div className="flex flex-wrap gap-2 mb-6 md:mb-8 p-1 bg-white/5 border border-white/10 rounded-sm w-fit relative z-20">
                     {(['login', 'card', 'id', 'note'] as VaultItemType[]).map(t => (
                         <button
                             key={t}
                             type="button"
                             onClick={() => setType(t)}
                             className={cn(
-                                "px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-sm",
+                                "px-3 md:px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-sm",
                                 type === t
                                     ? "bg-primary text-black shadow-[0_0_15px_rgba(255,176,0,0.3)]"
                                     : "text-primary/40 hover:text-primary/70 hover:bg-white/5"
