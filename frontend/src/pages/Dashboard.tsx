@@ -324,6 +324,8 @@ export default function Dashboard() {
                 onClose={() => { setIsAddOpen(false); setEditingItem(null); }}
                 onSave={handleSaveItem}
                 initialData={editingItem}
+                defaultType={activeTab === 'all' ? 'login' : activeTab}
+                showTypeSelector={activeTab === 'all'}
             />
 
             <ViewItemModal

@@ -11,6 +11,8 @@ interface Props {
     onClose: () => void;
     onSave: (type: VaultItemType, data: any, id?: string) => void;
     initialData?: DecryptedVaultItem | null;
+    defaultType?: VaultItemType;
+    showTypeSelector?: boolean;
 }
 
 const calculateDynamicEntropy = (pass: string) => {
@@ -33,8 +35,8 @@ const calculateDynamicEntropy = (pass: string) => {
     return { bits, label, color };
 };
 
-export default function NewItemModal({ isOpen, onClose, onSave, initialData }: Props) {
-    const [type, setType] = useState<VaultItemType>('login');
+export default function NewItemModal({ isOpen, onClose, onSave, initialData, defaultType, showTypeSelector = true }: Props) {
+    const [type, setType] = useState<VaultItemType>(defaultType || 'login');
     const [formData, setFormData] = useState<any>({});
 
     useEffect(() => {
@@ -44,10 +46,10 @@ export default function NewItemModal({ isOpen, onClose, onSave, initialData }: P
                 setFormData(initialData.data);
             } else {
                 setFormData({});
-                setType('login');
+                setType(defaultType || 'login');
             }
         }
-    }, [isOpen, initialData]);
+    }, [isOpen, initialData, defaultType]);
 
     if (!isOpen) return null;
 
@@ -81,23 +83,25 @@ export default function NewItemModal({ isOpen, onClose, onSave, initialData }: P
                     </h1>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-6 md:mb-8 p-1 bg-white/5 border border-white/10 rounded-sm w-fit relative z-20">
-                    {(['login', 'card', 'id', 'note'] as VaultItemType[]).map(t => (
-                        <button
-                            key={t}
-                            type="button"
-                            onClick={() => setType(t)}
-                            className={cn(
-                                "px-3 md:px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-sm",
-                                type === t
-                                    ? "bg-primary text-black shadow-[0_0_15px_rgba(255,176,0,0.3)]"
-                                    : "text-primary/40 hover:text-primary/70 hover:bg-white/5"
-                            )}
-                        >
-                            {t}
-                        </button>
-                    ))}
-                </div>
+                {showTypeSelector && (
+                    <div className="flex flex-wrap gap-2 mb-6 md:mb-8 p-1 bg-white/5 border border-white/10 rounded-sm w-fit relative z-20">
+                        {(['login', 'card', 'id', 'note'] as VaultItemType[]).map(t => (
+                            <button
+                                key={t}
+                                type="button"
+                                onClick={() => setType(t)}
+                                className={cn(
+                                    "px-3 md:px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-sm",
+                                    type === t
+                                        ? "bg-primary text-black shadow-[0_0_15px_rgba(255,176,0,0.3)]"
+                                        : "text-primary/40 hover:text-primary/70 hover:bg-white/5"
+                                )}
+                            >
+                                {t}
+                            </button>
+                        ))}
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-6 relative z-20">
                     <div className="space-y-2">
